@@ -1,0 +1,44 @@
+<div id="modalupload" class="modal">
+    <div class="modal-content">
+        <h4>Bild hochladen</h4>
+        <form id="form-upload" method="POST" action="upload" enctype="multipart/form-data">
+            <div class="file-field input-field">
+                <div class="btn">
+                    <span>Bild</span>
+                    <input type="file" name="image" accept="image/png,image/jpeg">
+                </div>
+                <div class="file-path-wrapper">
+                    <input class="file-path validate" type="text">
+                </div>
+            </div>
+            <div class="range-field">
+                <input type="range" min="1" max="100" value="50" id="skalierung">
+            </div>
+            <!--<span>Breite</span>
+            <input type="text" name="width">
+            <span>Höhe</span>
+            <input type="text" name="height">-->
+            <div class="">
+                <button class="btn waves-effect waves-light" type="submit">
+                    Upload
+                    <i class="material-icons file_upload"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Agree</a>
+    </div>
+</div>
+
+<script type="text/javascript">
+    /*document.addEventListener('DOMContentLoaded', function () {
+        let formUpload = document.getElementById('form-upload');
+        let inputFile = document.getElementsByName('file');
+        formUpload.onsubmit = function(e) {
+            file = inputFile[0].files[0];
+            console.log(file);
+            //e.preventDefault();
+        }
+    });*/
+</script>
