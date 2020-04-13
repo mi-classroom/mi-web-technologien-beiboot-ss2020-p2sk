@@ -1,7 +1,9 @@
 {{ template "header.tmpl" }}
 
-Uploaded
+<h1>Ihr Bild wurde gespeichert</h1>
+
+{{ if .uploaded }}
+<img class="responsive-img" src="{{.uploaded}}" alt="Ihr hochgeladenes Bild">
+{{ end }}
 
 {{ template "footer.tmpl" }}
-
-

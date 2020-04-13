@@ -10,12 +10,12 @@
             {{ if eq .Typ.Typ "quad"}}
             <div class="card">
                 <div class="card-image">
-                    <img class="image-responsive" src="{{.Pfad}}">
+                    <img class="responsive-img" src="{{.Pfad}}" srcset="{{$scrset}}">
                     
                 </div>
-                <div class="card-action">
+                <!--<div class="card-action">
                     <a href="#">Zum Bild</a>
-                </div>
+                </div>-->
             </div>
             {{end}}
         {{end}}
