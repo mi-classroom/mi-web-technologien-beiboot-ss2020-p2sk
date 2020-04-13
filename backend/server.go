@@ -6,7 +6,6 @@ import (
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -46,7 +45,19 @@ func FromFile(typen []BildTyp, pfad string) BildTyp {
 			return item
 		}
 	}
-	return BildTyp{}
+	tmp := strings.Split(strings.Split(dateiName, ".")[0], "-")
+	typ := tmp[0]
+	size, _ := strconv.Atoi(tmp[1])
+	return BildTyp{typ, size}
+}
+
+func stringInSlice(s []string, needle string) bool {
+	for _, item := range s {
+		if item == needle {
+			return true
+		}
+	}
+	return false
 }
 
 type Bild struct {
@@ -60,7 +71,11 @@ type Container struct {
 }
 
 func (c Container) ToScrset() string {
-	return "test"
+	var scrset []string
+	for _, e := range c.Bilder {
+		scrset = append(scrset, e.Pfad+" "+strconv.Itoa(e.Typ.Size)+"w")
+	}
+	return strings.Join(scrset, ", ")
 }
 
 const (
@@ -74,7 +89,7 @@ var (
 	validMimeTypes = validMime{[]string{"image/png", "image/jpeg"}}
 	bildTypen      = []BildTyp{
 		BildTyp{"desktop", 768},
-		BildTyp{"table", 640},
+		BildTyp{"tablet", 640},
 		BildTyp{"quad", 400},
 		BildTyp{"mobile", 360},
 	}
@@ -116,6 +131,12 @@ func main() {
 		validiereUpload(),
 		persistiereBild(),
 		skaliereBild(),
+		func(c *gin.Context) {
+			c.HTML(http.StatusOK, "uploaded.tmpl", gin.H{
+				"uploaded": filepath.ToSlash(c.MustGet("dateiPfad").(string)),
+				"errors":   c.Errors,
+			})
+		},
 	)
 
 	server.Run()
@@ -134,6 +155,7 @@ func liefereBilderAction() gin.HandlerFunc {
 
 func readImagesFromDir(dir string) map[string]Container {
 	var lastDir string
+	ignoreFiles := []string{".gitkeep"}
 	container := make(map[string]Container)
 
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -147,6 +169,9 @@ func readImagesFromDir(dir string) map[string]Container {
 			return nil
 		}
 
+		if stringInSlice(ignoreFiles, filepath.Base(path)) {
+			return nil
+		}
 		// Pfadseperator / Unix/Windows
 		path = filepath.ToSlash(path)
 
@@ -162,10 +187,8 @@ func readImagesFromDir(dir string) map[string]Container {
 // Middleware zur Prüfung auf valide Datei
 func validiereUpload() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		log.Println("Skalierungsfaktor")
 		c.Set("skalierung", c.PostForm("skalierung"))
 
-		log.Println("Validierung der Bilddaten")
 		file, err := c.FormFile("image")
 
 		if err != nil {
@@ -187,7 +210,7 @@ func validiereUpload() gin.HandlerFunc {
 //
 func persistiereBild() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		image := c.MustGet("image").(*multipart.FileHeader)
+		fileHeader := c.MustGet("image").(*multipart.FileHeader)
 		ordnerName := time.Now().Format("20060102150405")
 
 		err := os.Mkdir(filepath.Join(uploadDir, ordnerName), os.ModeDir)
@@ -196,9 +219,15 @@ func persistiereBild() gin.HandlerFunc {
 			c.Error(err)
 		}
 
+		file, _ := fileHeader.Open()
+		defer file.Close()
+		imageInfo, _, _ := image.DecodeConfig(file)
+
 		// see https://github.com/gin-gonic/gin/issues/1693
-		dateiDest := filepath.Join(uploadDir, ordnerName, strings.Join([]string{"original-", "", filepath.Ext(image.Filename)}, ""))
-		if err := c.SaveUploadedFile(image, dateiDest); err != nil {
+		dateiName := strings.Join([]string{"original-", strconv.Itoa(imageInfo.Width), filepath.Ext(fileHeader.Filename)}, "")
+
+		dateiDest := filepath.Join(uploadDir, ordnerName, dateiName)
+		if err := c.SaveUploadedFile(fileHeader, dateiDest); err != nil {
 			c.Error(err)
 		}
 		c.Set("dateiPfad", dateiDest)
@@ -213,7 +242,8 @@ func persistiereBild() gin.HandlerFunc {
 func skaliereBild() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dateiPfad := c.MustGet("dateiPfad").(string)
-
+		sFaktor, sExists := c.Get("skalierung")
+		sFaktor, _ = strconv.Atoi(sFaktor.(string))
 		bild, err := imaging.Open(dateiPfad)
 
 		if err != nil {
@@ -221,21 +251,29 @@ func skaliereBild() gin.HandlerFunc {
 		}
 
 		pfad := filepath.Dir(dateiPfad)
+		ext := filepath.Ext(dateiPfad)
 
 		var resized *image.NRGBA
 
 		for _, v := range bildTypen {
 			if v.Typ == "quad" {
-				resized = imaging.Resize(bild, v.Size*2, 0, imaging.Lanczos)
+				resized = imaging.Resize(bild, v.Size, 0, imaging.Lanczos)
 				resized = imaging.CropCenter(resized, v.Size, v.Size)
 			} else {
 				resized = imaging.Resize(bild, v.Size, 0, imaging.Lanczos)
 			}
-			imaging.Save(resized, filepath.Join(pfad, v.Typ+"-"+strconv.Itoa(v.Size)+".png"))
+			imaging.Save(resized, filepath.Join(pfad, v.Typ+"-"+strconv.Itoa(v.Size)+ext))
 		}
 
-		c.HTML(http.StatusOK, "uploaded.tmpl", gin.H{
-			"errors": c.Errors,
-		})
+		// custom
+		if sExists {
+			width := bild.Bounds().Dx() * sFaktor.(int) / 100
+			print(width)
+			resized = imaging.Resize(bild, width, 0, imaging.Lanczos)
+			pfad = filepath.Join(pfad, "custom-"+strconv.Itoa(width)+ext)
+			imaging.Save(resized, pfad)
+		}
+
+		c.Next()
 	}
 }
