@@ -253,12 +253,11 @@ func skaliereBild() gin.HandlerFunc {
 		pfad := filepath.Dir(dateiPfad)
 		ext := filepath.Ext(dateiPfad)
 
-		var resized *image.NRGBA
-
 		for _, v := range bildTypen {
+			var resized *image.NRGBA
 			if v.Typ == "quad" {
-				resized = imaging.Resize(bild, v.Size, 0, imaging.Lanczos)
-				resized = imaging.CropCenter(resized, v.Size, v.Size)
+				//resized =
+				resized = imaging.CropCenter(imaging.Resize(bild, 1280, 0, imaging.Lanczos), v.Size, v.Size)
 			} else {
 				resized = imaging.Resize(bild, v.Size, 0, imaging.Lanczos)
 			}
@@ -269,7 +268,7 @@ func skaliereBild() gin.HandlerFunc {
 		if sExists {
 			width := bild.Bounds().Dx() * sFaktor.(int) / 100
 			print(width)
-			resized = imaging.Resize(bild, width, 0, imaging.Lanczos)
+			resized := imaging.Resize(bild, width, 0, imaging.Lanczos)
 			pfad = filepath.Join(pfad, "custom-"+strconv.Itoa(width)+ext)
 			imaging.Save(resized, pfad)
 		}
