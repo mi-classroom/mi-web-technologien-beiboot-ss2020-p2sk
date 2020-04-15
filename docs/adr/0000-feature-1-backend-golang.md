@@ -3,9 +3,9 @@
 * Status: akzeptiert
 * Datum: 2020-04-06
 
-## Kontext und  Problemstellung
+## Kontext und Problemstellung
 
-Für das 1. Featrues des Beibootprojekts soll eine Picturebox entwicklet werden. Für welche Backend Technologie soll sich entschieden werden?
+Für das 1. Feature des Beibootprojekts soll eine Picturebox entwicklet werden. Für welche Backend Technologie soll sich entschieden werden?
 
 ## Entscheidungsgeber
 
@@ -19,7 +19,7 @@ Für das 1. Featrues des Beibootprojekts soll eine Picturebox entwicklet werden.
 
 ## Ergebnis der Entscheidung
 
-Es wurde sich für Option 3 (Go) entschieden, da Trend und persönliche Preferenz maßgeblich entscheidet sind.
+Es wurde sich für Option 3 (Go) entschieden, da Trend und persönliche Preferenz maßgeblich entscheident ist.
 
 ### Positive Konsequenzen
 
@@ -27,7 +27,7 @@ Es wurde sich für Option 3 (Go) entschieden, da Trend und persönliche Preferen
 
 ### Negative Konsequenzen
 
-* Wegen Einarbeitung Zeit in Erlenen aufzuwenden
+* Einarbeitung ist notwendig
 
 ## Links
 
