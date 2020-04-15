@@ -60,11 +60,6 @@ func stringInSlice(s []string, needle string) bool {
 	return false
 }
 
-type Bild struct {
-	Pfad string
-	Typ  BildTyp
-}
-
 type Container struct {
 	Dir    string
 	Bilder []Bild
@@ -256,8 +251,17 @@ func skaliereBild() gin.HandlerFunc {
 		for _, v := range bildTypen {
 			var resized *image.NRGBA
 			if v.Typ == "quad" {
-				//resized =
-				resized = imaging.CropCenter(imaging.Resize(bild, 1280, 0, imaging.Lanczos), v.Size, v.Size)
+				var cropped *image.NRGBA
+				dx := bild.Bounds().Dx()
+				dy := bild.Bounds().Dy()
+
+				if dx > dy {
+					cropped = imaging.CropCenter(bild, dy, dy)
+				} else {
+					cropped = imaging.CropCenter(bild, dx, dx)
+				}
+
+				resized = imaging.Resize(cropped, v.Size, 0, imaging.Lanczos)
 			} else {
 				resized = imaging.Resize(bild, v.Size, 0, imaging.Lanczos)
 			}
