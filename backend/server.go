@@ -19,38 +19,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type validMime struct {
-	mimes []string
-}
-
-func (mime *validMime) isValid(mimeType string) bool {
-	for _, mime := range mime.mimes {
-		if mime == mimeType {
-			return true
-		}
-	}
-	return false
-}
-
-type BildTyp struct {
-	Typ  string
-	Size int
-}
-
-func FromFile(typen []BildTyp, pfad string) BildTyp {
-	dateiName := filepath.Base(pfad)
-
-	for _, item := range typen {
-		if strings.Contains(dateiName, item.Typ) {
-			return item
-		}
-	}
-	tmp := strings.Split(strings.Split(dateiName, ".")[0], "-")
-	typ := tmp[0]
-	size, _ := strconv.Atoi(tmp[1])
-	return BildTyp{typ, size}
-}
-
 func stringInSlice(s []string, needle string) bool {
 	for _, item := range s {
 		if item == needle {
@@ -68,7 +36,7 @@ type Container struct {
 func (c Container) ToScrset() string {
 	var scrset []string
 	for _, e := range c.Bilder {
-		scrset = append(scrset, e.Pfad+" "+strconv.Itoa(e.Typ.Size)+"w")
+		scrset = append(scrset, e.Pfad+" "+strconv.Itoa(e.Typ().Size)+"w")
 	}
 	return strings.Join(scrset, ", ")
 }
@@ -81,13 +49,13 @@ const (
 )
 
 var (
-	validMimeTypes = validMime{[]string{"image/png", "image/jpeg"}}
-	bildTypen      = []BildTyp{
+	//validMimeTypes = validMime{[]string{"image/png", "image/jpeg"}}
+	/*bildTypen = []BildTyp{
 		BildTyp{"desktop", 768},
 		BildTyp{"tablet", 640},
 		BildTyp{"quad", 400},
 		BildTyp{"mobile", 360},
-	}
+	}*/
 	server *gin.Engine = gin.Default()
 )
 
@@ -108,7 +76,7 @@ func prepareServer() {
 // Server
 func main() {
 	fmt.Println("Golang Backendkomponente MI-Beibootprojekt")
-	fmt.Println("Feature: Image Upload")
+	fmt.Println("Picturebox")
 
 	prepareServer()
 
@@ -128,7 +96,7 @@ func main() {
 		skaliereBild(),
 		func(c *gin.Context) {
 			c.HTML(http.StatusOK, "uploaded.tmpl", gin.H{
-				"uploaded": filepath.ToSlash(c.MustGet("dateiPfad").(string)),
+				"uploaded": filepath.ToSlash(c.MustGet("bild").(Bild).Pfad),
 				"errors":   c.Errors,
 			})
 		},
@@ -145,6 +113,111 @@ func liefereBilderAction() gin.HandlerFunc {
 			"title":  "Übersichtsseite",
 			"bilder": bilder,
 		})
+	}
+}
+
+// Middleware zur Prüfung auf valide Datei
+func validiereUpload() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("skalierung", c.PostForm("skalierung"))
+
+		file, err := c.FormFile("image")
+
+		if err != nil {
+			c.Error(errors.New("Ihr Bild hat keinen validen Typ"))
+		}
+
+		if !isValid(file.Header.Get("Content-Type")) {
+			c.Error(errors.New("Invalider Mediatyp"))
+			c.AbortWithStatus(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		c.Set("image", file)
+
+		c.Next()
+	}
+}
+
+//
+func persistiereBild() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		fileHeader := c.MustGet("image").(*multipart.FileHeader)
+		ordnerName := time.Now().Format("20060102150405")
+
+		err := os.Mkdir(filepath.Join(uploadDir, ordnerName), 0755)
+
+		if err != nil {
+			c.Error(err)
+		}
+
+		file, _ := fileHeader.Open()
+		defer file.Close()
+		imageInfo, _, _ := image.DecodeConfig(file)
+
+		// see https://github.com/gin-gonic/gin/issues/1693
+		dateiName := strings.Join([]string{"original-", strconv.Itoa(imageInfo.Width), filepath.Ext(fileHeader.Filename)}, "")
+
+		dateiDest := filepath.Join(uploadDir, ordnerName, dateiName)
+		if err := c.SaveUploadedFile(fileHeader, dateiDest); err != nil {
+			c.Error(err)
+		}
+		bild := Bild{dateiDest}
+		c.Set("bild", bild)
+
+		c.Next()
+		// Wenn im weiteren Verlauf ein Fehler auftritt, sollte
+		// Datei ggf. vom Server gelöscht werden
+	}
+}
+
+//
+func skaliereBild() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bild := c.MustGet("bild").(Bild)
+		sFaktor, sExists := c.Get("skalierung")
+		sFaktor, _ = strconv.Atoi(sFaktor.(string))
+
+		//bild, err := imaging.Open(dateiPfad)
+
+		/*if err != nil {
+			c.Error(errors.New("Bild konnte nicht geöffnet werden"))
+		}*/
+
+		//pfad := filepath.Dir(dateiPfad)
+		//ext := filepath.Ext(dateiPfad)
+		bildDaten := bild.Image()
+
+		for _, v := range defaultTypen {
+			var resized *image.NRGBA
+			if v.Typ == "q" {
+				var cropped *image.NRGBA
+				dx := bildDaten.Bounds().Dx()
+				dy := bildDaten.Bounds().Dy()
+
+				if dx > dy {
+					cropped = imaging.CropCenter(bildDaten, dy, dy)
+				} else {
+					cropped = imaging.CropCenter(bildDaten, dx, dx)
+				}
+
+				resized = imaging.Resize(cropped, v.Size, 0, imaging.Lanczos)
+			} else {
+				resized = imaging.Resize(bildDaten, v.Size, 0, imaging.Lanczos)
+			}
+			imaging.Save(resized, filepath.Join(bild.Dir(), v.Typ+"-"+strconv.Itoa(v.Size)+bild.Ext()))
+		}
+
+		// custom
+		if sExists {
+			width := bildDaten.Bounds().Dx() * sFaktor.(int) / 100
+			//print(width)
+			resized := imaging.Resize(bildDaten, width, 0, imaging.Lanczos)
+			pfad := filepath.Join(bild.Dir(), "custom-"+strconv.Itoa(width)+bild.Ext())
+			imaging.Save(resized, pfad)
+		}
+
+		c.Next()
 	}
 }
 
@@ -171,112 +244,10 @@ func readImagesFromDir(dir string) map[string]Container {
 		path = filepath.ToSlash(path)
 
 		tmpContainer := container[lastDir]
-		tmpContainer.Bilder = append(tmpContainer.Bilder, Bild{path, FromFile(bildTypen, path)})
+		tmpContainer.Bilder = append(tmpContainer.Bilder, Bild{path})
 		container[lastDir] = tmpContainer
 		return nil
 	})
 
 	return container
-}
-
-// Middleware zur Prüfung auf valide Datei
-func validiereUpload() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("skalierung", c.PostForm("skalierung"))
-
-		file, err := c.FormFile("image")
-
-		if err != nil {
-			c.Error(errors.New("Ihr Bild hat keinen validen Typ"))
-		}
-
-		if !validMimeTypes.isValid(file.Header.Get("Content-Type")) {
-			c.Error(errors.New("Invalider Mediatyp"))
-			c.AbortWithStatus(http.StatusUnsupportedMediaType)
-			return
-		}
-
-		c.Set("image", file)
-
-		c.Next()
-	}
-}
-
-//
-func persistiereBild() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		fileHeader := c.MustGet("image").(*multipart.FileHeader)
-		ordnerName := time.Now().Format("20060102150405")
-
-		err := os.Mkdir(filepath.Join(uploadDir, ordnerName), os.ModeDir)
-
-		if err != nil {
-			c.Error(err)
-		}
-
-		file, _ := fileHeader.Open()
-		defer file.Close()
-		imageInfo, _, _ := image.DecodeConfig(file)
-
-		// see https://github.com/gin-gonic/gin/issues/1693
-		dateiName := strings.Join([]string{"original-", strconv.Itoa(imageInfo.Width), filepath.Ext(fileHeader.Filename)}, "")
-
-		dateiDest := filepath.Join(uploadDir, ordnerName, dateiName)
-		if err := c.SaveUploadedFile(fileHeader, dateiDest); err != nil {
-			c.Error(err)
-		}
-		c.Set("dateiPfad", dateiDest)
-
-		c.Next()
-		// Wenn im weiteren Verlauf ein Fehler auftritt, sollte
-		// Datei ggf. vom Server gelöscht werden
-	}
-}
-
-//
-func skaliereBild() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		dateiPfad := c.MustGet("dateiPfad").(string)
-		sFaktor, sExists := c.Get("skalierung")
-		sFaktor, _ = strconv.Atoi(sFaktor.(string))
-		bild, err := imaging.Open(dateiPfad)
-
-		if err != nil {
-			c.Error(errors.New("Bild konnte nicht geöffnet werden"))
-		}
-
-		pfad := filepath.Dir(dateiPfad)
-		ext := filepath.Ext(dateiPfad)
-
-		for _, v := range bildTypen {
-			var resized *image.NRGBA
-			if v.Typ == "quad" {
-				var cropped *image.NRGBA
-				dx := bild.Bounds().Dx()
-				dy := bild.Bounds().Dy()
-
-				if dx > dy {
-					cropped = imaging.CropCenter(bild, dy, dy)
-				} else {
-					cropped = imaging.CropCenter(bild, dx, dx)
-				}
-
-				resized = imaging.Resize(cropped, v.Size, 0, imaging.Lanczos)
-			} else {
-				resized = imaging.Resize(bild, v.Size, 0, imaging.Lanczos)
-			}
-			imaging.Save(resized, filepath.Join(pfad, v.Typ+"-"+strconv.Itoa(v.Size)+ext))
-		}
-
-		// custom
-		if sExists {
-			width := bild.Bounds().Dx() * sFaktor.(int) / 100
-			print(width)
-			resized := imaging.Resize(bild, width, 0, imaging.Lanczos)
-			pfad = filepath.Join(pfad, "custom-"+strconv.Itoa(width)+ext)
-			imaging.Save(resized, pfad)
-		}
-
-		c.Next()
-	}
 }
