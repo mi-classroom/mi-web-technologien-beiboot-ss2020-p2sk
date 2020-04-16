@@ -16,4 +16,6 @@
 
 backend/uploads/**/*.png
 backend/uploads/**/*.jpg
-#!uploads/.gitignore
+
+# Compiled unix file
+server
