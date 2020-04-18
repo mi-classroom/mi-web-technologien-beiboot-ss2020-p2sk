@@ -6,18 +6,18 @@ import (
 )
 
 var (
-	bild Bild = Bild{"testDir/testfile.png", BildTyp{"", 0}}
+	bild Bild = Bild{"testDir/testfile.png"}
 )
 
 func ExampleBild() {
 	fmt.Print(bild)
-	// Output: {testDir/testfile.png { 0}}
+	// Output: {testDir/testfile.png}
 }
 
 func ExampleNewBild() {
 	bild := new(Bild)
 	fmt.Print(bild)
-	// Output: &{ { 0}}
+	// Output: &{}
 }
 
 func TestDir(t *testing.T) {

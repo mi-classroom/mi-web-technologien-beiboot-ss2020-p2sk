@@ -4,21 +4,17 @@
 <div class="row">
     {{range .}}
     <div class="col s6 m4 l3">
-        {{ $scrset := .ToScrset}}
-        {{range .Bilder}}
-            {{/* why ask for Typ? */}}
-            {{ if eq .Typ.Typ "q"}}
+        {{$scrset := .ToScrset}}
+        
             <div class="card">
                 <div class="card-image">
-                    <img class="responsive-img" src="{{.Pfad}}" srcset="{{$scrset}}">
+                    <img class="responsive-img" src="{{index .Bilder 0}}" srcset="{{$scrset}}">
                     
                 </div>
                 <!--<div class="card-action">
                     <a href="#">Zum Bild</a>
                 </div>-->
             </div>
-            {{end}}
-        {{end}}
     </div>
     {{end}}
 </div>

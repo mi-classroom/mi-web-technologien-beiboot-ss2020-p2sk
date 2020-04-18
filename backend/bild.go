@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/disintegration/imaging"
 )
@@ -15,8 +14,6 @@ var validMimes []string = []string{
 	"image/jpeg",
 	"image/png",
 }
-
-//type validMimes []string
 
 func isValid(mimeType string) bool {
 	for _, mime := range validMimes {
@@ -27,18 +24,26 @@ func isValid(mimeType string) bool {
 	return false
 }
 
-//
-type BildTyp struct {
-	Typ  string
-	Size int
+// BildMaß
+type BildMaß struct {
+	Breite int
+	Höhe   int
+}
+
+func (bm *BildMaß) isQuad() bool {
+	return bm.Breite == bm.Höhe
+}
+
+func perFaktor(faktor, breite int) BildMaß {
+	return BildMaß{breite * faktor / 100, 0}
 }
 
 // BildTypen
-var defaultTypen []BildTyp = []BildTyp{
-	BildTyp{"l", 768},
-	BildTyp{"m", 640},
-	BildTyp{"q", 400},
-	BildTyp{"s", 360},
+var defaultMaße []BildMaß = []BildMaß{
+	{1024, 0},
+	{768, 0},
+	{400, 400},
+	{360, 0},
 }
 
 // Bild Model
@@ -46,6 +51,7 @@ type Bild struct {
 	Pfad string
 }
 
+// Dir liefert den Pfad des Bildes
 func (b *Bild) Dir() string {
 	return filepath.Dir(b.Pfad)
 }
@@ -63,6 +69,12 @@ func (b *Bild) Ext() string {
 // MimeType liefert entsprechend der Dateiendung den Mime Typ
 func (b *Bild) MimeType() string {
 	return mime.TypeByExtension(b.Ext())
+}
+
+//
+func (b *Bild) Width() int {
+	config, _, _ := image.DecodeConfig(b.Open())
+	return config.Width
 }
 
 // Open öffnet die Datei und gibt eine Datei zurück
@@ -84,14 +96,35 @@ func (b *Bild) Image() image.Image {
 }
 
 //
-func (b Bild) Resize(typ BildTyp) {
-	resized := imaging.Resize(b.Image(), typ.Size, 0, imaging.Lanczos)
-	newFile := filepath.Join(b.Dir(), typ.Typ+"-"+strconv.Itoa(typ.Size)+b.Ext())
+func (b Bild) Resize(maß BildMaß) {
+	resized := imaging.Resize(b.Image(), maß.Breite, maß.Höhe, imaging.Lanczos)
+	dx, dy := resized.Bounds().Dx(), resized.Bounds().Dy()
+
+	newFile := filepath.Join(b.Dir(), strconv.Itoa(dx)+"x"+strconv.Itoa(dy)+b.Ext())
 	imaging.Save(resized, newFile)
 }
 
 //
-func (b Bild) Typ() BildTyp {
+func (b Bild) CropResize(maß BildMaß) {
+	var cropped *image.NRGBA
+	image := b.Image()
+	dx, dy := image.Bounds().Dx(), image.Bounds().Dy()
+
+	if dx > dy {
+		cropped = imaging.CropCenter(image, dy, dy)
+	} else {
+		cropped = imaging.CropCenter(image, dx, dx)
+	}
+	resized := imaging.Resize(cropped, maß.Breite, 0, imaging.Lanczos)
+
+	dx, dy = resized.Bounds().Dx(), resized.Bounds().Dy()
+
+	newFile := filepath.Join(b.Dir(), strconv.Itoa(dx)+"x"+strconv.Itoa(dy)+b.Ext())
+	imaging.Save(resized, newFile)
+}
+
+//
+/*func (b Bild) Size() BildTyp {
 	dateiName := b.Name()
 
 	for _, item := range defaultTypen {
@@ -103,7 +136,7 @@ func (b Bild) Typ() BildTyp {
 	typ := tmp[0]
 	size, _ := strconv.Atoi(tmp[1])
 	return BildTyp{typ, size}
-}
+}*/
 
 /*func Save(string path) {
 

@@ -14,8 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/disintegration/imaging"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,15 +26,17 @@ func stringInSlice(s []string, needle string) bool {
 	return false
 }
 
+// Container
 type Container struct {
 	Dir    string
 	Bilder []Bild
 }
 
+// ToScrset
 func (c Container) ToScrset() string {
 	var scrset []string
 	for _, e := range c.Bilder {
-		scrset = append(scrset, e.Pfad+" "+strconv.Itoa(e.Typ().Size)+"w")
+		scrset = append(scrset, e.Pfad+" "+strconv.Itoa(e.Width())+"w")
 	}
 	return strings.Join(scrset, ", ")
 }
@@ -49,13 +49,6 @@ const (
 )
 
 var (
-	//validMimeTypes = validMime{[]string{"image/png", "image/jpeg"}}
-	/*bildTypen = []BildTyp{
-		BildTyp{"desktop", 768},
-		BildTyp{"tablet", 640},
-		BildTyp{"quad", 400},
-		BildTyp{"mobile", 360},
-	}*/
 	server *gin.Engine = gin.Default()
 )
 
@@ -162,8 +155,8 @@ func persistiereBild() gin.HandlerFunc {
 		if err := c.SaveUploadedFile(fileHeader, dateiDest); err != nil {
 			c.Error(err)
 		}
-		bild := Bild{dateiDest}
-		c.Set("bild", bild)
+
+		c.Set("bild", Bild{dateiDest})
 
 		c.Next()
 		// Wenn im weiteren Verlauf ein Fehler auftritt, sollte
@@ -178,43 +171,18 @@ func skaliereBild() gin.HandlerFunc {
 		sFaktor, sExists := c.Get("skalierung")
 		sFaktor, _ = strconv.Atoi(sFaktor.(string))
 
-		//bild, err := imaging.Open(dateiPfad)
-
-		/*if err != nil {
-			c.Error(errors.New("Bild konnte nicht geöffnet werden"))
-		}*/
-
-		//pfad := filepath.Dir(dateiPfad)
-		//ext := filepath.Ext(dateiPfad)
-		bildDaten := bild.Image()
-
-		for _, v := range defaultTypen {
-			var resized *image.NRGBA
-			if v.Typ == "q" {
-				var cropped *image.NRGBA
-				dx := bildDaten.Bounds().Dx()
-				dy := bildDaten.Bounds().Dy()
-
-				if dx > dy {
-					cropped = imaging.CropCenter(bildDaten, dy, dy)
-				} else {
-					cropped = imaging.CropCenter(bildDaten, dx, dx)
-				}
-
-				resized = imaging.Resize(cropped, v.Size, 0, imaging.Lanczos)
+		for _, v := range defaultMaße {
+			if v.isQuad() {
+				bild.CropResize(v)
 			} else {
-				resized = imaging.Resize(bildDaten, v.Size, 0, imaging.Lanczos)
+				bild.Resize(v)
 			}
-			imaging.Save(resized, filepath.Join(bild.Dir(), v.Typ+"-"+strconv.Itoa(v.Size)+bild.Ext()))
 		}
 
 		// custom
 		if sExists {
-			width := bildDaten.Bounds().Dx() * sFaktor.(int) / 100
-			//print(width)
-			resized := imaging.Resize(bildDaten, width, 0, imaging.Lanczos)
-			pfad := filepath.Join(bild.Dir(), "custom-"+strconv.Itoa(width)+bild.Ext())
-			imaging.Save(resized, pfad)
+			customMaß := perFaktor(sFaktor.(int), bild.Image().Bounds().Dx())
+			bild.Resize(customMaß)
 		}
 
 		c.Next()
