@@ -9,6 +9,23 @@ var (
 	bild Bild = Bild{"testDir/testfile.png"}
 )
 
+func BenchmarkWidthPerOpenFile(b *testing.B) {
+	bild := Bild{"logos.jpg"}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		bild.Width()
+	}
+}
+
+func BenchmarkWidthPerImage(b *testing.B) {
+	bild := Bild{"logos.jpg"}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tmp := bild.Image()
+		tmp.Bounds().Dx()
+	}
+}
+
 func ExampleBild() {
 	fmt.Print(bild)
 	// Output: {testDir/testfile.png}
