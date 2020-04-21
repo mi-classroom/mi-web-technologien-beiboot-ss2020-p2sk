@@ -2,19 +2,37 @@ package main
 
 import (
 	"image"
+	"image/color"
+	"log"
 	"mime"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/disintegration/imaging"
+	"github.com/ericpauley/go-quantize/quantize"
 )
 
-var validMimes []string = []string{
-	"image/jpeg",
-	"image/png",
+// Galerie hält alle Bilder im Uploadverzeichnis
+type Galerie struct {
+	Dir      string
+	Sammlung Sammlung
 }
 
+// ToScrset liefert pro Sammlung den scrset
+func (c Galerie) ToScrset() string {
+	var scrset []string
+	for _, e := range c.Sammlung {
+		scrset = append(scrset, e.Pfad+" "+strconv.Itoa(e.Width())+"w")
+	}
+	return strings.Join(scrset, ", ")
+}
+
+// Sammlung beschreibt die Menge eines Bildes
+type Sammlung []Bild
+
+//
 func isValid(mimeType string) bool {
 	for _, mime := range validMimes {
 		if mime == mimeType {
@@ -24,7 +42,22 @@ func isValid(mimeType string) bool {
 	return false
 }
 
-// BildMaß
+// Farbpalette beschreibt eine Sammlung von Farben (interface type Color)
+type Farbpalette color.Palette
+
+func (f Farbpalette) convert() []struct{ r, g, b, a uint8 } {
+	var tmp []struct{ r, g, b, a uint8 }
+
+	for _, c := range f {
+		r, g, b, a := c.RGBA()
+		r, g, b, a = r>>8, g>>8, b>>8, a>>8
+		tmp = append(tmp, struct{ r, g, b, a uint8 }{uint8(r), uint8(g), uint8(b), uint8(a)})
+	}
+	log.Print(tmp)
+	return tmp
+}
+
+// BildMaß repräsentiert ein BildMaß aus Breite und Höhe
 type BildMaß struct {
 	Breite int
 	Höhe   int
@@ -36,14 +69,6 @@ func (bm *BildMaß) isQuad() bool {
 
 func perFaktor(faktor, breite int) BildMaß {
 	return BildMaß{breite * faktor / 100, 0}
-}
-
-// BildTypen
-var defaultMaße []BildMaß = []BildMaß{
-	{1024, 0},
-	{768, 0},
-	{400, 400},
-	{360, 0},
 }
 
 // Bild Model
@@ -71,7 +96,9 @@ func (b *Bild) MimeType() string {
 	return mime.TypeByExtension(b.Ext())
 }
 
-//
+// Width gibt die Breite des Bildes per image.DecodeConfig zurück.
+// Diese Funktion ist wesentlich performanter als die Breite über
+// den image.Image Typ und desen Bounds() Methode zu holen
 func (b *Bild) Width() int {
 	config, _, _ := image.DecodeConfig(b.Open())
 	return config.Width
@@ -86,7 +113,7 @@ func (b *Bild) Open() *os.File {
 	return handler
 }
 
-//
+// Image gibt eine image.Image Repräsentation des Bildes zurück
 func (b *Bild) Image() image.Image {
 	image, err := imaging.Open(b.Pfad)
 	if err != nil {
@@ -95,7 +122,7 @@ func (b *Bild) Image() image.Image {
 	return image
 }
 
-//
+// Resize skaliert das Bild auf das angegebene BildMaß
 func (b Bild) Resize(maß BildMaß) {
 	resized := imaging.Resize(b.Image(), maß.Breite, maß.Höhe, imaging.Lanczos)
 	dx, dy := resized.Bounds().Dx(), resized.Bounds().Dy()
@@ -104,7 +131,8 @@ func (b Bild) Resize(maß BildMaß) {
 	imaging.Save(resized, newFile)
 }
 
-//
+// CropResize schneidet das Bild quadratisch zu und
+// skaliert das Bild auf das angegebene BildMaß
 func (b Bild) CropResize(maß BildMaß) {
 	var cropped *image.NRGBA
 	image := b.Image()
@@ -124,20 +152,7 @@ func (b Bild) CropResize(maß BildMaß) {
 }
 
 //
-/*func (b Bild) Size() BildTyp {
-	dateiName := b.Name()
-
-	for _, item := range defaultTypen {
-		if strings.Contains(dateiName, item.Typ) {
-			return item
-		}
-	}
-	tmp := strings.Split(strings.Split(dateiName, ".")[0], "-")
-	typ := tmp[0]
-	size, _ := strconv.Atoi(tmp[1])
-	return BildTyp{typ, size}
-}*/
-
-/*func Save(string path) {
-
-}*/
+func (b Bild) Quantisiere() Farbpalette {
+	q := quantize.MedianCutQuantizer{}
+	return Farbpalette(q.Quantize(make([]color.Color, 0, anzahlFarben), b.Image()))
+}
