@@ -4,16 +4,22 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	//"text/template"
+	"html/template"
 	"time"
 
+	"github.com/ericpauley/go-quantize/quantize"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,27 +32,10 @@ func stringInSlice(s []string, needle string) bool {
 	return false
 }
 
-// Container
-type Container struct {
-	Dir    string
-	Bilder []Bild
+func toCSS(c color.RGBA) template.CSS {
+	s := "background-color: rgba(" + strings.Join([]string{strconv.Itoa(int(c.R)), strconv.Itoa(int(c.G)), strconv.Itoa(int(c.B)), strconv.Itoa(int(c.A))}, ", ") + ");"
+	return template.CSS(s)
 }
-
-// ToScrset
-func (c Container) ToScrset() string {
-	var scrset []string
-	for _, e := range c.Bilder {
-		scrset = append(scrset, e.Pfad+" "+strconv.Itoa(e.Width())+"w")
-	}
-	return strings.Join(scrset, ", ")
-}
-
-const (
-	uploadDir   = "uploads/"
-	cssDir      = "css/"
-	jsDir       = "js/"
-	templateDir = "templates/**/*"
-)
 
 var (
 	server *gin.Engine = gin.Default()
@@ -61,6 +50,10 @@ func prepareServer() {
 	server.Static("/uploads", uploadDir)
 	//fs := http.Dir(uploadDir)
 	//server.StaticFS("/uploads", fs)
+
+	server.SetFuncMap(template.FuncMap{
+		"toCSS": toCSS,
+	})
 
 	// Templates
 	server.LoadHTMLGlob(templateDir)
@@ -87,9 +80,11 @@ func main() {
 		validiereUpload(),
 		persistiereBild(),
 		skaliereBild(),
+		quantisiereBild(),
 		func(c *gin.Context) {
 			c.HTML(http.StatusOK, "uploaded.tmpl", gin.H{
 				"uploaded": filepath.ToSlash(c.MustGet("bild").(Bild).Pfad),
+				"farben":   c.MustGet("farben"),
 				"errors":   c.Errors,
 			})
 		},
@@ -149,7 +144,7 @@ func persistiereBild() gin.HandlerFunc {
 		imageInfo, _, _ := image.DecodeConfig(file)
 
 		// see https://github.com/gin-gonic/gin/issues/1693
-		dateiName := strings.Join([]string{"original-", strconv.Itoa(imageInfo.Width), filepath.Ext(fileHeader.Filename)}, "")
+		dateiName := strings.Join([]string{strconv.Itoa(imageInfo.Width), "x", strconv.Itoa(imageInfo.Height), filepath.Ext(fileHeader.Filename)}, "")
 
 		dateiDest := filepath.Join(uploadDir, ordnerName, dateiName)
 		if err := c.SaveUploadedFile(fileHeader, dateiDest); err != nil {
@@ -189,10 +184,23 @@ func skaliereBild() gin.HandlerFunc {
 	}
 }
 
-func readImagesFromDir(dir string) map[string]Container {
+//
+func quantisiereBild() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bild := c.MustGet("bild").(Bild)
+		q := quantize.MedianCutQuantizer{}
+		p := q.Quantize(make([]color.Color, 0, anzahlFarben), bild.Image())
+
+		c.Set("farben", p)
+		log.Println(bild.Pfad)
+		c.Next()
+	}
+}
+
+// Liest alle Bilder aus dem Upload Verzeichnis
+func readImagesFromDir(dir string) map[string]Galerie {
 	var lastDir string
-	ignoreFiles := []string{".gitkeep"}
-	container := make(map[string]Container)
+	galerie := make(map[string]Galerie)
 
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() && info.Name() == filepath.Dir(uploadDir) {
@@ -201,7 +209,7 @@ func readImagesFromDir(dir string) map[string]Container {
 
 		if info.IsDir() {
 			lastDir = info.Name()
-			container[lastDir] = Container{lastDir, make([]Bild, 0)}
+			galerie[lastDir] = Galerie{lastDir, make([]Bild, 0)}
 			return nil
 		}
 
@@ -211,11 +219,11 @@ func readImagesFromDir(dir string) map[string]Container {
 		// Pfadseperator / Unix/Windows
 		path = filepath.ToSlash(path)
 
-		tmpContainer := container[lastDir]
-		tmpContainer.Bilder = append(tmpContainer.Bilder, Bild{path})
-		container[lastDir] = tmpContainer
+		tmpGalerie := galerie[lastDir]
+		tmpGalerie.Sammlung = append(tmpGalerie.Sammlung, Bild{path})
+		galerie[lastDir] = tmpGalerie
 		return nil
 	})
 
-	return container
+	return galerie
 }

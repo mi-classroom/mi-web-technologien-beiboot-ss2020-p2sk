@@ -2,6 +2,15 @@
 
 <h1>Ihr Bild wurde gespeichert</h1>
 
+{{ if .farben }}
+<div class="row">
+    {{ range $i, $v := .farben }}
+    {{$rgbaCSS := toCSS $v}}
+<div class="col s1" style="height:25px; {{$rgbaCSS}}"></div>
+    {{ end }}
+</div>
+{{ end }}
+
 {{ if .uploaded }}
 <img class="responsive-img" src="{{.uploaded}}" alt="Ihr hochgeladenes Bild">
 {{ end }}
