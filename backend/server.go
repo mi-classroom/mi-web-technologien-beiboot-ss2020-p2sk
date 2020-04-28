@@ -1,13 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
 	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
-	"log"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -15,11 +16,9 @@ import (
 	"strconv"
 	"strings"
 
-	//"text/template"
 	"html/template"
 	"time"
 
-	"github.com/ericpauley/go-quantize/quantize"
 	"github.com/gin-gonic/gin"
 )
 
@@ -43,13 +42,8 @@ var (
 
 // Konfigurieren des Servers
 func prepareServer() {
-	// Statische Dateien wie JS, CSS
-	server.Static("/css", cssDir)
-	server.Static("/js", jsDir)
 	// Bildverzeichnis
 	server.Static("/uploads", uploadDir)
-	//fs := http.Dir(uploadDir)
-	//server.StaticFS("/uploads", fs)
 
 	server.SetFuncMap(template.FuncMap{
 		"toCSS": toCSS,
@@ -71,8 +65,6 @@ func main() {
 		"/",
 		liefereBilderAction(),
 	)
-
-	//server.Get("/bild/:dir",)
 
 	// Bilder upload
 	server.POST(
@@ -115,7 +107,7 @@ func validiereUpload() gin.HandlerFunc {
 			c.Error(errors.New("Ihr Bild hat keinen validen Typ"))
 		}
 
-		if !isValid(file.Header.Get("Content-Type")) {
+		if !isValid(MimeType(file.Header.Get("Content-Type"))) {
 			c.Error(errors.New("Invalider Mediatyp"))
 			c.AbortWithStatus(http.StatusUnsupportedMediaType)
 			return
@@ -144,7 +136,7 @@ func persistiereBild() gin.HandlerFunc {
 		imageInfo, _, _ := image.DecodeConfig(file)
 
 		// see https://github.com/gin-gonic/gin/issues/1693
-		dateiName := strings.Join([]string{strconv.Itoa(imageInfo.Width), "x", strconv.Itoa(imageInfo.Height), filepath.Ext(fileHeader.Filename)}, "")
+		dateiName := strings.Join([]string{strconv.Itoa(imageInfo.Width), "x", strconv.Itoa(imageInfo.Height), strings.ToLower(filepath.Ext(fileHeader.Filename))}, "")
 
 		dateiDest := filepath.Join(uploadDir, ordnerName, dateiName)
 		if err := c.SaveUploadedFile(fileHeader, dateiDest); err != nil {
@@ -188,11 +180,11 @@ func skaliereBild() gin.HandlerFunc {
 func quantisiereBild() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bild := c.MustGet("bild").(Bild)
-		q := quantize.MedianCutQuantizer{}
-		p := q.Quantize(make([]color.Color, 0, anzahlFarben), bild.Image())
+		palette := bild.Quantisiere(anzahlFarben)
 
-		c.Set("farben", p)
-		log.Println(bild.Pfad)
+		bild.SpeicherColorMap(palette, colorFile)
+
+		c.Set("farben", palette)
 		c.Next()
 	}
 }
@@ -209,12 +201,22 @@ func readImagesFromDir(dir string) map[string]Galerie {
 
 		if info.IsDir() {
 			lastDir = info.Name()
-			galerie[lastDir] = Galerie{lastDir, make([]Bild, 0)}
+			galerie[lastDir] = Galerie{lastDir, Farbpalette{}, make([]Bild, 0)}
 			return nil
 		}
 
 		if stringInSlice(ignoreFiles, filepath.Base(path)) {
 			return nil
+		}
+
+		if info.Name() == colorFile {
+			var rgba Farbpalette
+			tmp := galerie[lastDir]
+			data, _ := ioutil.ReadFile(path)
+
+			json.Unmarshal(data, &rgba)
+			tmp.ColorMap = rgba
+			galerie[lastDir] = tmp
 		}
 		// Pfadseperator / Unix/Windows
 		path = filepath.ToSlash(path)

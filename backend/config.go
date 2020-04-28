@@ -3,13 +3,12 @@ package main
 const (
 	anzahlFarben = 8
 	uploadDir    = "uploads/"
-	cssDir       = "css/"
-	jsDir        = "js/"
 	templateDir  = "templates/**/*"
+	colorFile    = "colormap.json"
 )
 
 var (
-	validMimes []string = []string{
+	validMimes []MimeType = []MimeType{
 		"image/jpeg",
 		"image/png",
 	}
@@ -19,5 +18,5 @@ var (
 		{400, 400},
 		{360, 0},
 	}
-	ignoreFiles []string = []string{".gitkeep", "colormap.json"}
+	ignoreFiles []string = []string{".gitkeep"}
 )

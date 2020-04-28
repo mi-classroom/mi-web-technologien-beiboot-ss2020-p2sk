@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"image"
 	"image/color"
 	"log"
@@ -14,9 +15,25 @@ import (
 	"github.com/ericpauley/go-quantize/quantize"
 )
 
+// @todo Saubere Typenstruktur erstellen
+
+//
+type MimeType string
+
+//
+func isValid(mimeType MimeType) bool {
+	for _, mime := range validMimes {
+		if mime == mimeType {
+			return true
+		}
+	}
+	return false
+}
+
 // Galerie hält alle Bilder im Uploadverzeichnis
 type Galerie struct {
 	Dir      string
+	ColorMap Farbpalette
 	Sammlung Sammlung
 }
 
@@ -29,33 +46,25 @@ func (c Galerie) ToScrset() string {
 	return strings.Join(scrset, ", ")
 }
 
-// Sammlung beschreibt die Menge eines Bildes
+// Sammlung stellt zu einem Bild alle Referenzen/Größen dar
 type Sammlung []Bild
 
-//
-func isValid(mimeType string) bool {
-	for _, mime := range validMimes {
-		if mime == mimeType {
-			return true
-		}
+// Farbpalette beschreibt eine Sammlung von Farben
+type Farbpalette []color.RGBA
+
+func NewFarbpalette(palette color.Palette) Farbpalette {
+	fp := make(Farbpalette, len(palette))
+	for i, c := range palette {
+		fp[i] = c.(color.RGBA)
 	}
-	return false
+	return fp
 }
 
-// Farbpalette beschreibt eine Sammlung von Farben (interface type Color)
-type Farbpalette color.Palette
-
-func (f Farbpalette) convert() []struct{ r, g, b, a uint8 } {
-	var tmp []struct{ r, g, b, a uint8 }
-
-	for _, c := range f {
-		r, g, b, a := c.RGBA()
-		r, g, b, a = r>>8, g>>8, b>>8, a>>8
-		tmp = append(tmp, struct{ r, g, b, a uint8 }{uint8(r), uint8(g), uint8(b), uint8(a)})
-	}
-	log.Print(tmp)
-	return tmp
-}
+/*func (f Farbpalette) UnmarshalJSON(data []byte) error {
+	//var rgba []color.RGBA
+	json.Unmarshal(data, f)
+	return nil
+}*/
 
 // BildMaß repräsentiert ein BildMaß aus Breite und Höhe
 type BildMaß struct {
@@ -151,8 +160,23 @@ func (b Bild) CropResize(maß BildMaß) {
 	imaging.Save(resized, newFile)
 }
 
-//
-func (b Bild) Quantisiere() Farbpalette {
+// Quantisiere erstellt eine Farbpalette
+func (b Bild) Quantisiere(anzahl int) Farbpalette {
 	q := quantize.MedianCutQuantizer{}
-	return Farbpalette(q.Quantize(make([]color.Color, 0, anzahlFarben), b.Image()))
+	p := q.Quantize(make([]color.Color, 0, anzahl), b.Image())
+	fp := NewFarbpalette(p)
+	return fp
+}
+
+//
+func (b Bild) SpeicherColorMap(palette Farbpalette, fileName string) {
+	byte, err := json.Marshal(palette)
+
+	if err != nil {
+		log.Panicf("Json Marshal fehlgeschlagen: %s", err.Error())
+	}
+
+	jsonFile, _ := os.Create(filepath.Join(b.Dir(), fileName))
+	jsonFile.Write(byte)
+	jsonFile.Close()
 }

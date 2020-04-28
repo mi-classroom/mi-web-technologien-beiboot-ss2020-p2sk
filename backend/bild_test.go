@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"testing"
 )
 
@@ -27,14 +28,12 @@ func BenchmarkWidthPerImage(b *testing.B) {
 }
 
 func ExampleBild() {
-	fmt.Print(bild)
-	// Output: {testDir/testfile.png}
-}
+	fmt.Println(bild)
 
-func ExampleNewBild() {
 	bild := new(Bild)
 	fmt.Print(bild)
-	// Output: &{}
+	// Output: {testDir/testfile.png}
+	// &{}
 }
 
 func TestDir(t *testing.T) {
@@ -63,6 +62,30 @@ func TestMimeType(t *testing.T) {
 	if got != "image/png" {
 		t.Errorf("Bild.MimeType() = %s; want image/png", got)
 	}
+}
+
+func TestJson(t *testing.T) {
+	bild := Bild{"logos.jpg"}
+	q := bild.Quantisiere()
+
+	for _, c := range q {
+		t.Log(c.(color.RGBA).R)
+		t.Log(c.(color.RGBA).G)
+		t.Log(c.(color.RGBA).B)
+	}
+
+	/*b, err := json.Marshal(q)
+
+	if err != nil {
+		t.Errorf("Bild.Name() = %s; want testfile.png", b)
+	}
+
+	q2 := make(color.Palette, 0, 0)
+	//t.Errorf("Bild.Name() = %T; want testfile.png", q2)
+	err = json.Unmarshal(b, &q2)
+	t.Errorf("Bild.Name() = %v; want testfile.png", b)
+	//log.Print(q2)
+	// Output: 123*/
 }
 
 /*
