@@ -5,14 +5,19 @@
     {{range .}}
     <div class="col s6 m4 l3">
         {{$scrset := .ToScrset}}
-        
             <div class="card">
                 <div class="card-image">
                     <img class="responsive-img" src="{{index .Sammlung 0}}" srcset="{{$scrset}}">
                     
                 </div>
                 <div class="card-action">
-                    Farbpalette
+                    <div class="row">
+                        {{range .ColorMap}}
+                        <div class="col 12" style="background-color: rgba({{.R}},{{.G}},{{.B}},{{.A}}); height: 25px;"></div>
+                        
+                        {{end}}
+
+                    </div>
                 </div>
             </div>
     </div>
