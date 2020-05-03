@@ -1,80 +1,80 @@
-package main
+package gallery
 
 import (
 	"fmt"
-	"image/color"
 	"testing"
 )
 
+const testImage = "logos.jpg"
+
 var (
-	bild Bild = Bild{"testDir/testfile.png"}
+	imageDummy Image = Image{"testDir/testfile.png"}
 )
 
 func BenchmarkWidthPerOpenFile(b *testing.B) {
-	bild := Bild{"logos.jpg"}
+	image := Image{testImage}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		bild.Width()
+		image.Width()
 	}
 }
 
 func BenchmarkWidthPerImage(b *testing.B) {
-	bild := Bild{"logos.jpg"}
+	image := Image{testImage}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		tmp := bild.Image()
+		tmp := image.Image()
 		tmp.Bounds().Dx()
 	}
 }
 
-func ExampleBild() {
-	fmt.Println(bild)
+func ExampleImage() {
+	fmt.Println(imageDummy)
 
-	bild := new(Bild)
-	fmt.Print(bild)
+	image := new(Image)
+	fmt.Print(image)
 	// Output: {testDir/testfile.png}
 	// &{}
 }
 
 func TestDir(t *testing.T) {
-	got := bild.Dir()
+	got := imageDummy.Dir()
 	if got != "testDir" {
-		t.Errorf("Bild.Dir() = %s; want testDir", got)
+		t.Errorf("got Image.Dir() = %s; want \"testDir\"", got)
 	}
 }
 
 func TestName(t *testing.T) {
-	got := bild.Name()
+	got := imageDummy.Name()
 	if got != "testfile.png" {
-		t.Errorf("Bild.Name() = %s; want testfile.png", got)
+		t.Errorf("got Image.Name() = %s; want \"testfile.png\"", got)
 	}
 }
 
 func TestExt(t *testing.T) {
-	got := bild.Ext()
+	got := imageDummy.Ext()
 	if got != ".png" {
-		t.Errorf("Bild.Ext() = %s; want .png", got)
+		t.Errorf("got Image.Ext() = %s; want \".png\"", got)
 	}
 }
 
 func TestMimeType(t *testing.T) {
-	got := bild.MimeType()
+	got := imageDummy.MimeType()
 	if got != "image/png" {
-		t.Errorf("Bild.MimeType() = %s; want image/png", got)
+		t.Errorf("got Image.MimeType() = %s; want \"image/png\"", got)
 	}
 }
 
-func TestJson(t *testing.T) {
-	bild := Bild{"logos.jpg"}
-	q := bild.Quantisiere()
+/*func TestJson(t *testing.T) {
+	image := Image{testImage}
+	q := image.Quantize(10)
 
 	for _, c := range q {
 		t.Log(c.(color.RGBA).R)
 		t.Log(c.(color.RGBA).G)
 		t.Log(c.(color.RGBA).B)
 	}
-
-	/*b, err := json.Marshal(q)
+	b, err := json.Marshal(q)
 
 	if err != nil {
 		t.Errorf("Bild.Name() = %s; want testfile.png", b)
@@ -85,8 +85,8 @@ func TestJson(t *testing.T) {
 	err = json.Unmarshal(b, &q2)
 	t.Errorf("Bild.Name() = %v; want testfile.png", b)
 	//log.Print(q2)
-	// Output: 123*/
-}
+	// Output: 123
+}*/
 
 /*
 func TestOpen(){}
