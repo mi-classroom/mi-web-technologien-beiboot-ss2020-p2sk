@@ -21,11 +21,13 @@ go build
 #### Test
 
 ```
-go test bild_test.go bild.go config.go
+cd gallery/
+go test
 ```
 
 #### Benchmark
 
 ```
-go test -bench . bild_test.go bild.go config.go
+cd gallery/
+go test -bench .
 ```
