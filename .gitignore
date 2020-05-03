@@ -19,5 +19,4 @@ backend/uploads/**/*.jpg
 backend/uploads/**/*.json
 
 # Compiled unix file
-server
-backend
+backend/backend
