@@ -1,11 +1,12 @@
 # Golang als Backend Sprache
 
 * Status: akzeptiert
+* Workload: 2h
 * Datum: 2020-04-06
 
 ## Kontext und Problemstellung
 
-Für das 1. Feature des Beibootprojekts soll eine Picturebox entwicklet werden. Für welche Backend Technologie soll sich entschieden werden?
+Für das 1. Feature des Beibootprojekts soll eine Picturebox entwickelt werden. Für welche Backend Technologie soll sich entschieden werden?
 
 ## Entscheidungsgeber
 

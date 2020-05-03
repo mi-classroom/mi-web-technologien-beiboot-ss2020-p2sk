@@ -1,6 +1,7 @@
 # Golang Imageing Modul für Skalierung und Zuschnitt
 
 * Status: akzeptiert
+* Workload: 10h
 * Datum: 2020-04-06
 
 ## Kontext und Problemstellung

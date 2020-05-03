@@ -1,6 +1,7 @@
 # Gin Gonic als HTTP Backend Web-Framework
 
 * Status: akzeptiert
+* Workload: 8h
 * Datum: 2020-04-06
 
 ## Kontext und Problemstellung

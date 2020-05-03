@@ -1,6 +1,7 @@
-# Server in Dockercontainer laufen lassen
+# Quantisierung mit Paket go-quantize
 
 * Status: akzeptiert
+* Workload: 8h
 * Datum: 2020-04-16
 
 ## Kontext und Problemstellung

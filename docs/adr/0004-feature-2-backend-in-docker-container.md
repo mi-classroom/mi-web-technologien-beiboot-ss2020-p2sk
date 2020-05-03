@@ -1,6 +1,7 @@
 # Server in Dockercontainer laufen lassen
 
 * Status: akzeptiert
+* Workload: 2h
 * Datum: 2020-04-16
 
 ## Kontext und Problemstellung

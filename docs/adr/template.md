@@ -1,6 +1,7 @@
 # [kurzer Titel des gelösten Problems und Lösung]
 
 * Status: [vorgeschlagen | abgelehnt | akzeptiert | überholt | … | ersetzt durch [ADR-0005](0005-example.md)] <!-- optional -->
+* Workload: [Stunden gebraucht] <!-- optional -->
 * Entscheider: [auflisten aller Beteiligter] <!-- optional -->
 * Datum: [YYYY-MM-DD der letzten Aktualisierung] <!-- optional -->
 

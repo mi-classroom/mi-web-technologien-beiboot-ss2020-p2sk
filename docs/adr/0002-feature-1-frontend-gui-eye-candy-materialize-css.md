@@ -1,6 +1,7 @@
 # Fronted GUI minimal wie möglich Eye-Candy Materialize CSS
 
 * Status: akzeptiert
+* Workload: 3h
 * Datum: 2020-04-06
 
 ## Kontext und Problemstellung
