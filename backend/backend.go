@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"image"
 	"image/color"
 	_ "image/jpeg"
@@ -15,10 +16,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"html/template"
 	"time"
 
+	"./gallery"
 	"github.com/gin-gonic/gin"
 )
 
@@ -63,20 +63,20 @@ func main() {
 	// Übersichtseite ausliefern
 	server.GET(
 		"/",
-		liefereBilderAction(),
+		overviewAction(),
 	)
 
 	// Bilder upload
 	server.POST(
 		"/upload",
-		validiereUpload(),
-		persistiereBild(),
-		skaliereBild(),
-		quantisiereBild(),
+		validateUpload(),
+		persistImage(),
+		scaleImage(),
+		quantizeImage(),
 		func(c *gin.Context) {
 			c.HTML(http.StatusOK, "uploaded.tmpl", gin.H{
-				"uploaded": filepath.ToSlash(c.MustGet("bild").(Bild).Pfad),
-				"farben":   c.MustGet("farben"),
+				"uploaded": filepath.ToSlash(c.MustGet("image").(gallery.Image).Path),
+				"colors":   c.MustGet("colors"),
 				"errors":   c.Errors,
 			})
 		},
@@ -86,20 +86,20 @@ func main() {
 }
 
 // Endpunkt Bildübersicht
-func liefereBilderAction() gin.HandlerFunc {
+func overviewAction() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		bilder := readImagesFromDir(uploadDir)
+		images := readImagesFromDir(uploadDir)
 		c.HTML(http.StatusOK, "overview.tmpl", gin.H{
 			"title":  "Übersichtsseite",
-			"bilder": bilder,
+			"images": images,
 		})
 	}
 }
 
 // Middleware zur Prüfung auf valide Datei
-func validiereUpload() gin.HandlerFunc {
+func validateUpload() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("skalierung", c.PostForm("skalierung"))
+		c.Set("customScale", c.PostForm("customScale"))
 
 		file, err := c.FormFile("image")
 
@@ -107,7 +107,7 @@ func validiereUpload() gin.HandlerFunc {
 			c.Error(errors.New("Ihr Bild hat keinen validen Typ"))
 		}
 
-		if !isValid(MimeType(file.Header.Get("Content-Type"))) {
+		if !gallery.IsValid(gallery.MimeType(file.Header.Get("Content-Type"))) {
 			c.Error(errors.New("Invalider Mediatyp"))
 			c.AbortWithStatus(http.StatusUnsupportedMediaType)
 			return
@@ -120,12 +120,12 @@ func validiereUpload() gin.HandlerFunc {
 }
 
 //
-func persistiereBild() gin.HandlerFunc {
+func persistImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		fileHeader := c.MustGet("image").(*multipart.FileHeader)
-		ordnerName := time.Now().Format("20060102150405")
+		dirName := time.Now().Format("20060102150405")
 
-		err := os.Mkdir(filepath.Join(uploadDir, ordnerName), 0755)
+		err := os.Mkdir(filepath.Join(uploadDir, dirName), 0755)
 
 		if err != nil {
 			c.Error(err)
@@ -136,14 +136,14 @@ func persistiereBild() gin.HandlerFunc {
 		imageInfo, _, _ := image.DecodeConfig(file)
 
 		// see https://github.com/gin-gonic/gin/issues/1693
-		dateiName := strings.Join([]string{strconv.Itoa(imageInfo.Width), "x", strconv.Itoa(imageInfo.Height), strings.ToLower(filepath.Ext(fileHeader.Filename))}, "")
+		fileName := strings.Join([]string{strconv.Itoa(imageInfo.Width), "x", strconv.Itoa(imageInfo.Height), strings.ToLower(filepath.Ext(fileHeader.Filename))}, "")
 
-		dateiDest := filepath.Join(uploadDir, ordnerName, dateiName)
-		if err := c.SaveUploadedFile(fileHeader, dateiDest); err != nil {
+		fileDest := filepath.Join(uploadDir, dirName, fileName)
+		if err := c.SaveUploadedFile(fileHeader, fileDest); err != nil {
 			c.Error(err)
 		}
 
-		c.Set("bild", Bild{dateiDest})
+		c.Set("image", gallery.Image{fileDest})
 
 		c.Next()
 		// Wenn im weiteren Verlauf ein Fehler auftritt, sollte
@@ -152,24 +152,24 @@ func persistiereBild() gin.HandlerFunc {
 }
 
 //
-func skaliereBild() gin.HandlerFunc {
+func scaleImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		bild := c.MustGet("bild").(Bild)
-		sFaktor, sExists := c.Get("skalierung")
-		sFaktor, _ = strconv.Atoi(sFaktor.(string))
+		image := c.MustGet("image").(gallery.Image)
 
-		for _, v := range defaultMaße {
-			if v.isQuad() {
-				bild.CropResize(v)
+		for _, s := range defaultImageSizes {
+			if s.IsQuad() {
+				image.CropResize(s)
 			} else {
-				bild.Resize(v)
+				image.Resize(s)
 			}
 		}
 
-		// custom
-		if sExists {
-			customMaß := perFaktor(sFaktor.(int), bild.Image().Bounds().Dx())
-			bild.Resize(customMaß)
+		// custom scaling
+		scaleValue, scaleExists := c.Get("customScale")
+		if scaleExists {
+			scaleValue, _ = strconv.Atoi(scaleValue.(string))
+			customSize := gallery.FromFactor(scaleValue.(int), image.Width() /*Image().Bounds().Dx()*/)
+			image.Resize(customSize)
 		}
 
 		c.Next()
@@ -177,22 +177,22 @@ func skaliereBild() gin.HandlerFunc {
 }
 
 //
-func quantisiereBild() gin.HandlerFunc {
+func quantizeImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		bild := c.MustGet("bild").(Bild)
-		palette := bild.Quantisiere(anzahlFarben)
+		image := c.MustGet("image").(gallery.Image)
+		palette := image.Quantize(colorCount)
 
-		bild.SpeicherColorMap(palette, colorFile)
+		image.SaveColorPalette(colorFile, palette)
 
-		c.Set("farben", palette)
+		c.Set("colors", palette)
 		c.Next()
 	}
 }
 
 // Liest alle Bilder aus dem Upload Verzeichnis
-func readImagesFromDir(dir string) map[string]Galerie {
+func readImagesFromDir(dir string) map[string]gallery.Gallery {
 	var lastDir string
-	galerie := make(map[string]Galerie)
+	tmpGallery := make(map[string]gallery.Gallery)
 
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() && info.Name() == filepath.Dir(uploadDir) {
@@ -201,7 +201,7 @@ func readImagesFromDir(dir string) map[string]Galerie {
 
 		if info.IsDir() {
 			lastDir = info.Name()
-			galerie[lastDir] = Galerie{lastDir, Farbpalette{}, make([]Bild, 0)}
+			tmpGallery[lastDir] = gallery.Gallery{lastDir, gallery.ColorPalette{}, make([]gallery.Image, 0)}
 			return nil
 		}
 
@@ -210,22 +210,22 @@ func readImagesFromDir(dir string) map[string]Galerie {
 		}
 
 		if info.Name() == colorFile {
-			var rgba Farbpalette
-			tmp := galerie[lastDir]
+			var rgba gallery.ColorPalette
+			tmp := tmpGallery[lastDir]
 			data, _ := ioutil.ReadFile(path)
 
 			json.Unmarshal(data, &rgba)
 			tmp.ColorMap = rgba
-			galerie[lastDir] = tmp
+			tmpGallery[lastDir] = tmp
 		}
 		// Pfadseperator / Unix/Windows
 		path = filepath.ToSlash(path)
 
-		tmpGalerie := galerie[lastDir]
-		tmpGalerie.Sammlung = append(tmpGalerie.Sammlung, Bild{path})
-		galerie[lastDir] = tmpGalerie
+		tmpGalerie := tmpGallery[lastDir]
+		tmpGalerie.Collection = append(tmpGalerie.Collection, gallery.Image{path})
+		tmpGallery[lastDir] = tmpGalerie
 		return nil
 	})
 
-	return galerie
+	return tmpGallery
 }

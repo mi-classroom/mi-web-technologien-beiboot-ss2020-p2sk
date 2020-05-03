@@ -2,9 +2,9 @@
 
 <h1>Ihr Bild wurde gespeichert</h1>
 
-{{ if .farben }}
+{{ if .colors }}
 <div class="row">
-    {{ range $i, $v := .farben }}
+    {{ range $i, $v := .colors }}
     {{$rgbaCSS := toCSS $v}}
 <div class="col s1" style="height:25px; {{$rgbaCSS}}"></div>
     {{ end }}

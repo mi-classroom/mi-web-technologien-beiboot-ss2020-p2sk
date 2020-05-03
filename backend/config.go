@@ -1,18 +1,16 @@
 package main
 
+import "./gallery"
+
 const (
-	anzahlFarben = 8
-	uploadDir    = "uploads/"
-	templateDir  = "templates/**/*"
-	colorFile    = "colormap.json"
+	colorCount  = 8
+	uploadDir   = "uploads/"
+	templateDir = "templates/**/*"
+	colorFile   = "colormap.json"
 )
 
 var (
-	validMimes []MimeType = []MimeType{
-		"image/jpeg",
-		"image/png",
-	}
-	defaultMaße []BildMaß = []BildMaß{
+	defaultImageSizes []gallery.ImageSize = []gallery.ImageSize{
 		{1024, 0},
 		{768, 0},
 		{400, 400},

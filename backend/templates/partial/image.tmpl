@@ -1,13 +1,12 @@
 <!-- Einzelene Bilder -->
 
-
 <div class="row">
     {{range .}}
     <div class="col s6 m4 l3">
         {{$scrset := .ToScrset}}
             <div class="card">
                 <div class="card-image">
-                    <img class="responsive-img" src="{{index .Sammlung 0}}" srcset="{{$scrset}}">
+                    <img class="responsive-img" src="{{index .Collection 0}}" srcset="{{$scrset}}">
                     
                 </div>
                 <div class="card-action">
