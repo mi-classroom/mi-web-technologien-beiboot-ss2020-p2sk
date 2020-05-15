@@ -7,7 +7,7 @@
 
 Technische Geschichte: [Beschreibung | Ticket/Issue URL] <!-- optional -->
 
-## Kontext und  Problemstellung
+## Kontext und Problemstellung
 
 [Beschreibung des Kontextes und der Problemstellung, z. B., in zwei bis drei Sätzen als Freitext. Ggf. sollte das Problem als Frage formuliert sein.]
 
