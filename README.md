@@ -1,32 +1,22 @@
-# Beibootprojekt Installation per Docker
+# Beibootprojekt - PictureBox
 
-### Repository clonen und in Verzeichnis wechseln
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](docs/CODE_OF_CONDUCT.md) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 
-```
-git clone https://github.com/mi-classroom/mi-web-technologien-beiboot-ss2020-p2sk
-cd PathTo/mi-web-technologien-beiboot-ss2020-p2sk
-```
+The "dinghy-project" at TH Köln - University of Applied Sciences in the course of [studies information technology](https://www.medieninformatik.th-koeln.de/study/master/schwerpunkte/weaving-the-web/) is to train and improve the working and development of [code tasks](https://github.com/mi-classroom/mi-master-wt-beiboot-2020/issues). The focus of this project is the development of a PictureBox.
 
-### Image bauen
+## How to contribute
 
-```
-docker-compose build
-```
+For contributing to this project please review the [Contributing](docs/CONTRIBUTING.md) guide.
 
-### Container starten
+## License
 
-```
-docker-compose up -d
-```
+This project is licensed under the terms of the MIT license. See [License](LICENSE.md)
 
-### Im Browser aufrufen
+### Third party software
 
-```
-localhost:8080
-```
+This project uses third party software.
 
-### Container beenden
-
-```
-docker-compose down [--remove-orphans]
-```
+* https://github.com/gin-gonic/gin License: MIT
+* https://github.com/disintegration/imaging License: MIT
+* https://github.com/ericpauley/go-quantize License: BSD 3
