@@ -1,83 +1,22 @@
 # Contributing
 
+First of all, thank you very much to start contributing to this project. Before you start, please read through this guide.
+
 ## Code of Conduct
 
-
+To build a strong and healthy community from the startup, I decided to add the [Contributor Covenant](CODE_OF_CONDUCT.md). 
 
 ## Design decisions
 
-
-## Setting up a dev environment
-
-### clone repo
-
-```
-git clone https://github.com/mi-classroom/mi-web-technologien-beiboot-ss2020-p2sk
-cd PathTo/mi-web-technologien-beiboot-ss2020-p2sk
-```
-
-### Without Docker
-
-#### Get Go dependencies
-
-```
-go get
-```
-
-#### Build
-
-```
-go build
-```
-
-#### Start the server
-
-```
-./backend[.exe]
-```
-
-#### Benchmark
-
-```
-cd backend/gallery/
-go test -bench .
-```
-
-### With Docker
-
-#### Build image
-
-```
-docker-compose build
-```
-
-#### Start container
-
-```
-docker-compose up -d
-```
-
-#### Open in browser
-
-```
-localhost:8080
-```
-
-### Stop container
-
-```
-docker-compose down [--remove-orphans]
-```
-
-## Testing
-
-```
-cd backend/gallery/
-go test
-```
-
+This projects uses [ADR](https://adr.github.io/) to track all the decisions made. You can read up the decision by visiting the [ADR Index](adr/index.md).
 
 ## Styleguides for Go Code
 
-* https://golang.org/doc/effective_go.html
-* https://github.com/golang/go/wiki/CodeReviewComments
+When contributing also be familiar with [How to effective Go](https://golang.org/doc/effective_go.html) and addiotionaly the [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments). Beside of this, Go uses [gofmt](https://golang.org/cmd/gofmt/) to format the Go code. If your IDE doesn't support this feature automatically like [Go for VS Code](https://code.visualstudio.com/docs/languages/go) please format your code after completion.
+
+## Git Workflow
+
+* https://guides.github.com/introduction/flow/
+* https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/github-flow#following-the-github-flow
+* https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests
+* https://guides.github.com/activities/forking/
