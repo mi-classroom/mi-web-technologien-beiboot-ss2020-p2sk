@@ -76,6 +76,15 @@ cd backend/gallery/
 go test -bench .
 ```
 
+## Scaffolding
+
+To scaffold some example images you can run the scaffolding script. This downloads 25 images directly into the `uploads/` directory. The API is provied by [picsum.photos](https://picsum.photos/).
+
+```
+cd backend/scaffolding
+go run scaffolding.go
+```
+
 ## License
 
 This project is licensed under the terms of the MIT license. See [License](LICENSE.md).
