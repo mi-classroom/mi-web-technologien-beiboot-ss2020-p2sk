@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/disintegration/imaging"
 	"github.com/ericpauley/go-quantize/quantize"
@@ -39,6 +40,13 @@ type Gallery struct {
 	Dir        string
 	ColorMap   ColorPalette
 	Collection Collection
+}
+
+func MakeImageDir(uploadDir string) string {
+	dirName := time.Now().Format("20060102150405")
+	path := filepath.Join(uploadDir, dirName)
+	/*err :=*/ os.Mkdir(path, 0755)
+	return path
 }
 
 // ToScrset liefert pro Sammlung den scrset
@@ -162,7 +170,7 @@ func (i Image) CropResize(size ImageSize) {
 }
 
 // Quantize erstellt eine Farbpalette
-func (i Image) Quantize(count int) ColorPalette {
+func (i Image) quantize(count int) ColorPalette {
 	q := quantize.MedianCutQuantizer{}
 	p := q.Quantize(make([]color.Color, 0, count), i.Image())
 	fp := NewColorPalette(p)
@@ -170,7 +178,9 @@ func (i Image) Quantize(count int) ColorPalette {
 }
 
 // SaveColorPalette speichert die quantisierte Farbpalette
-func (i Image) SaveColorPalette(fileName string, palette ColorPalette) {
+func (i Image) SaveColorPalette(fileName string, colorCount int) ColorPalette {
+	palette := i.quantize(colorCount)
+
 	byte, err := json.Marshal(palette)
 
 	if err != nil {
@@ -180,4 +190,6 @@ func (i Image) SaveColorPalette(fileName string, palette ColorPalette) {
 	jsonFile, _ := os.Create(filepath.Join(i.Dir(), fileName))
 	jsonFile.Write(byte)
 	jsonFile.Close()
+
+	return palette
 }
