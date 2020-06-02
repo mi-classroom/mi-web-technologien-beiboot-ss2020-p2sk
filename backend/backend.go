@@ -16,8 +16,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
+	"./config"
 	"./gallery"
 	"github.com/gin-gonic/gin"
 )
@@ -43,14 +43,14 @@ var (
 // Konfigurieren des Servers
 func prepareServer() {
 	// Bildverzeichnis
-	server.Static("/uploads", uploadDir)
+	server.Static("/uploads", config.UploadDir)
 
 	server.SetFuncMap(template.FuncMap{
 		"toCSS": toCSS,
 	})
 
 	// Templates
-	server.LoadHTMLGlob(templateDir)
+	server.LoadHTMLGlob(config.TemplateDir)
 }
 
 // Server
@@ -88,7 +88,7 @@ func main() {
 // Endpunkt Bildübersicht
 func overviewAction() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		images := readImagesFromDir(uploadDir)
+		images := readImagesFromDir(config.UploadDir)
 		c.HTML(http.StatusOK, "overview.tmpl", gin.H{
 			"title":  "Übersichtsseite",
 			"images": images,
@@ -123,13 +123,12 @@ func validateUpload() gin.HandlerFunc {
 func persistImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		fileHeader := c.MustGet("image").(*multipart.FileHeader)
-		dirName := time.Now().Format("20060102150405")
 
-		err := os.Mkdir(filepath.Join(uploadDir, dirName), 0755)
+		path := gallery.MakeImageDir(config.UploadDir)
 
-		if err != nil {
+		/*if err != nil {
 			c.Error(err)
-		}
+		}*/
 
 		file, _ := fileHeader.Open()
 		defer file.Close()
@@ -138,7 +137,7 @@ func persistImage() gin.HandlerFunc {
 		// see https://github.com/gin-gonic/gin/issues/1693
 		fileName := strings.Join([]string{strconv.Itoa(imageInfo.Width), "x", strconv.Itoa(imageInfo.Height), strings.ToLower(filepath.Ext(fileHeader.Filename))}, "")
 
-		fileDest := filepath.Join(uploadDir, dirName, fileName)
+		fileDest := filepath.Join(config.UploadDir, path, fileName)
 		if err := c.SaveUploadedFile(fileHeader, fileDest); err != nil {
 			c.Error(err)
 		}
@@ -156,7 +155,7 @@ func scaleImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		image := c.MustGet("image").(gallery.Image)
 
-		for _, s := range defaultImageSizes {
+		for _, s := range config.DefaultImageSizes {
 			if s.IsQuad() {
 				image.CropResize(s)
 			} else {
@@ -168,7 +167,7 @@ func scaleImage() gin.HandlerFunc {
 		scaleValue, scaleExists := c.Get("customScale")
 		if scaleExists {
 			scaleValue, _ = strconv.Atoi(scaleValue.(string))
-			customSize := gallery.FromFactor(scaleValue.(int), image.Width() /*Image().Bounds().Dx()*/)
+			customSize := gallery.FromFactor(scaleValue.(int), image.Width())
 			image.Resize(customSize)
 		}
 
@@ -180,9 +179,8 @@ func scaleImage() gin.HandlerFunc {
 func quantizeImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		image := c.MustGet("image").(gallery.Image)
-		palette := image.Quantize(colorCount)
 
-		image.SaveColorPalette(colorFile, palette)
+		palette := image.SaveColorPalette(config.ColorFile, config.ColorCount)
 
 		c.Set("colors", palette)
 		c.Next()
@@ -195,7 +193,7 @@ func readImagesFromDir(dir string) map[string]gallery.Gallery {
 	tmpGallery := make(map[string]gallery.Gallery)
 
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() && info.Name() == filepath.Dir(uploadDir) {
+		if info.IsDir() && info.Name() == filepath.Dir(config.UploadDir) {
 			return err
 		}
 
@@ -205,11 +203,11 @@ func readImagesFromDir(dir string) map[string]gallery.Gallery {
 			return nil
 		}
 
-		if stringInSlice(ignoreFiles, filepath.Base(path)) {
+		if stringInSlice(config.IgnoreFiles, filepath.Base(path)) {
 			return nil
 		}
 
-		if info.Name() == colorFile {
+		if info.Name() == config.ColorFile {
 			var rgba gallery.ColorPalette
 			tmp := tmpGallery[lastDir]
 			data, _ := ioutil.ReadFile(path)
@@ -222,7 +220,7 @@ func readImagesFromDir(dir string) map[string]gallery.Gallery {
 		path = filepath.ToSlash(path)
 
 		tmpGalerie := tmpGallery[lastDir]
-		tmpGalerie.Collection = append(tmpGalerie.Collection, gallery.Image{path})
+		tmpGalerie.Collection = append(tmpGalerie.Collection, gallery.Image{Path: path})
 		tmpGallery[lastDir] = tmpGalerie
 		return nil
 	})
