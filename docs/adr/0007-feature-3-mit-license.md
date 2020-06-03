@@ -1,5 +1,6 @@
 # MIT-Lizenz
 
+* Status: akzeptiert
 * Workload: 1h
 * Datum: 9.5.2020
 

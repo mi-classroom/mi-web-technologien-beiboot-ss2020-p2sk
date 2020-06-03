@@ -1,5 +1,6 @@
 # Code of Conduct (Verhaltensregeln)
 
+* Status: akzeptiert
 * Workload: 1h
 * Datum: 8.5.2020
 

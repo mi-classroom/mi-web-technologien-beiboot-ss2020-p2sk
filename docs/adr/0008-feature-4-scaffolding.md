@@ -1,6 +1,7 @@
 # Scaffolding with picsum.photo
 
-* Workload: 4h
+* Status: akzeptiert
+* Workload: 5h
 * Datum: 3.6.2020
 
 ## Kontext und Problemstellung
