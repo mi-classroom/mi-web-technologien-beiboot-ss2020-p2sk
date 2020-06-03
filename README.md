@@ -78,11 +78,17 @@ go test -bench .
 
 ## Scaffolding
 
-To scaffold some example images you can run the scaffolding script. This downloads 25 images directly into the `uploads/` directory. The API is provied by [picsum.photos](https://picsum.photos/).
+To scaffold some example images you can run the scaffolding cli. This command will download images directly into the `uploads/` directory. The API is provied by [picsum.photos](https://picsum.photos/).
 
 ```
 cd backend/scaffolding
 go run scaffolding.go
+```
+
+Use the `-h` parameter to see all the possible flags. For example use `-c <int>` to specify the image count to download and `-d` to clear the `uploads/` dir.
+
+```
+go run scaffolding.go -h
 ```
 
 ## License
