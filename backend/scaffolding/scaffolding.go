@@ -68,6 +68,9 @@ func main() {
 				sImage.Resize(s)
 			}
 		}
+
+		fmt.Println("Quantize image")
+		sImage.SaveColorPalette(config.ColorFile, config.ColorCount)
 	}
 }
 
