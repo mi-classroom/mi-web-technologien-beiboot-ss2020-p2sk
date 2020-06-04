@@ -1,8 +1,7 @@
 {{ template "header.tmpl" }}
 
 <main>
-    <div class="container">
-        <h1>{{.title}}</h1>
+    <div class="container section">
         {{ if .images }}
             {{template "image.tmpl" .images}}
         {{else}}
