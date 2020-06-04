@@ -3,7 +3,7 @@ package config
 import "../gallery"
 
 const (
-	ColorCount  = 8
+	ColorCount  = 12
 	UploadDir   = "uploads/"
 	TemplateDir = "templates/**/*"
 	ColorFile   = "colormap.json"
