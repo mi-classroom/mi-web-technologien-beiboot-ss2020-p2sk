@@ -16,6 +16,7 @@
 
 backend/uploads/**/*.png
 backend/uploads/**/*.jpg
+backend/uploads/**/*.jpeg
 backend/uploads/**/*.json
 
 # Compiled unix file
