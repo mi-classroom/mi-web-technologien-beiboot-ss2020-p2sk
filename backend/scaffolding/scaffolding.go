@@ -23,6 +23,7 @@ import (
 )
 
 const uploadDir = "../" + config.UploadDir
+const defaultQuality = 90
 
 var picsumURI = "https://picsum.photos/v2/list?page=%d&limit=%d"
 
@@ -61,13 +62,7 @@ func main() {
 		dImage := downloadImage(image["download_url"].(string))
 		sImage := saveImage(dImage)
 
-		for _, s := range config.DefaultImageSizes {
-			if s.IsQuad() {
-				sImage.CropResize(s)
-			} else {
-				sImage.Resize(s)
-			}
-		}
+		sImage.ProcessImageSizes(config.DefaultImageSizes)
 
 		fmt.Println("Quantize image")
 		sImage.SaveColorPalette(config.ColorFile, config.ColorCount)
@@ -77,20 +72,14 @@ func main() {
 func deleteImages() {
 	fmt.Println("Should I delete all images from the upload dir? [y/n]")
 
-	reader := bufio.NewReader(os.Stdin)
-	char, _, err := reader.ReadRune()
-	fmt.Println(char == 'y')
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	answer := readCharFromStdin()
 
-	switch char {
+	switch answer {
 	case 'y', 'Y':
-		dir, _ := ioutil.ReadDir(uploadDir)
-		for _, d := range dir {
-			if d.IsDir() {
-				os.RemoveAll(path.Join([]string{uploadDir, d.Name()}...))
+		dirItems, _ := ioutil.ReadDir(uploadDir)
+		for _, dirItem := range dirItems {
+			if dirItem.IsDir() {
+				os.RemoveAll(path.Join([]string{uploadDir, dirItem.Name()}...))
 			}
 		}
 		os.Exit(0)
@@ -102,11 +91,22 @@ func deleteImages() {
 
 }
 
+func readCharFromStdin() rune {
+	reader := bufio.NewReader(os.Stdin)
+	char, _, err := reader.ReadRune()
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return char
+}
+
 func hasImages() bool {
 	dirItems, _ := ioutil.ReadDir(uploadDir)
 
-	for _, item := range dirItems {
-		if item.IsDir() {
+	for _, dirItem := range dirItems {
+		if dirItem.IsDir() {
 			return true
 		}
 	}
@@ -143,6 +143,6 @@ func saveImage(image image.Image) gallery.Image {
 	path := filepath.Join(newDir, fileName)
 	file, _ := os.Create(path)
 
-	jpeg.Encode(file, image, &jpeg.Options{Quality: 90})
+	jpeg.Encode(file, image, &jpeg.Options{Quality: defaultQuality})
 	return gallery.Image{Path: path}
 }
