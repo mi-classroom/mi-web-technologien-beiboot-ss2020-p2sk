@@ -6,17 +6,15 @@
     <div class="col s6 m4 l3">
         <div class="card">
             <div class="card-image">
-                <img class="responsive-img" src="{{ .Collection.GetPreview.Path }}">
+                <img class="responsive-img activator" src="{{ .Collection.GetPreview.Path }}">
                 
             </div>
-            <div class="">
+            <div class="card-reveal">
+                <span class="card-title grey-text text-darken-4">Colorpalette<i class="material-icons right">close</i></span>
                 {{range .ColorMap}}
-                <div class="col s1" style="background-color: rgba({{.R}},{{.G}},{{.B}},{{.A}}); height: 25px;">
-                </div>
-                
+                    <div class="col s1" style="background-color: rgba({{.R}},{{.G}},{{.B}},{{.A}}); height: 25px;"></div>
                 {{end}}
-
-            </div>
+              </div>
         </div>
     </div>
     {{end}}
