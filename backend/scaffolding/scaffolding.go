@@ -16,7 +16,6 @@ import (
 	_ "os"
 	"path"
 	"path/filepath"
-	"strconv"
 
 	"../config"
 	"../gallery"
@@ -58,14 +57,14 @@ func main() {
 	json.Unmarshal(body, &dat)
 
 	for i, image := range dat {
-		fmt.Printf("Start downloading file %d: %s \n", i+1, image["download_url"].(string))
-		dImage := downloadImage(image["download_url"].(string))
-		sImage := saveImage(dImage)
+		downloadURL := image["download_url"].(string)
+		fmt.Printf("Start downloading file %d: %s \n", i+1, downloadURL)
 
-		sImage.ProcessImageSizes(config.DefaultImageSizes)
+		savedImage := saveImage(downloadURL)
+		savedImage.ProcessImageSizes(config.DefaultImageSizes)
 
 		fmt.Println("Quantize image")
-		sImage.SaveColorPalette(config.ColorFile, config.ColorCount)
+		savedImage.SaveColorPalette(config.ColorFile, config.ColorCount)
 	}
 }
 
@@ -124,8 +123,18 @@ func getURLData(url string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func downloadImage(url string) image.Image {
-	body, _ := getURLData(url)
+func saveImage(url string) gallery.Image {
+	body, err := getURLData(url)
+
+	if err != nil {
+		panic(err)
+	}
+
+	imageConfig, format, _ := image.DecodeConfig(bytes.NewReader(body))
+
+	fileName := fmt.Sprintf("%dx%d.%s", imageConfig.Width, imageConfig.Height, format)
+	imageDir := gallery.MakeImageDir(uploadDir)
+	path := filepath.Join(imageDir, fileName)
 
 	image, _, err := image.Decode(bytes.NewReader(body))
 
@@ -133,16 +142,7 @@ func downloadImage(url string) image.Image {
 		panic(err)
 	}
 
-	return image
-}
-
-func saveImage(image image.Image) gallery.Image {
-	width := strconv.Itoa(image.Bounds().Max.X)
-	newDir := gallery.MakeImageDir(uploadDir)
-	fileName := "original-" + width + ".jpg"
-	path := filepath.Join(newDir, fileName)
 	file, _ := os.Create(path)
-
 	jpeg.Encode(file, image, &jpeg.Options{Quality: defaultQuality})
 	return gallery.Image{Path: path}
 }
