@@ -61,6 +61,15 @@ func (g Gallery) ToScrset() string {
 // Collection stellt zu einem Bild alle Referenzen/Größen dar
 type Collection []Image
 
+func (c Collection) GetPreview() Image {
+	for _, image := range c {
+		if image.ImageSize().IsQuad() {
+			return image
+		}
+	}
+	return c[0]
+}
+
 // ColorPalette beschreibt eine Sammlung von Farben
 type ColorPalette []color.RGBA
 
@@ -114,6 +123,12 @@ func (i *Image) MimeType() string {
 	return mime.TypeByExtension(i.Ext())
 }
 
+// ImageSize
+func (i *Image) ImageSize() *ImageSize {
+	config, _, _ := image.DecodeConfig(i.Open())
+	return &ImageSize{config.Width, config.Height}
+}
+
 // Width gibt die Breite des Bildes per image.DecodeConfig zurück.
 // Diese Funktion ist wesentlich performanter als die Breite über
 // den image.Image Typ und desen Bounds() Methode zu holen
@@ -138,6 +153,17 @@ func (i *Image) Image() image.Image {
 		panic(err)
 	}
 	return image
+}
+
+// ProcessImageSizes
+func (i Image) ProcessImageSizes(imageSizes []ImageSize) {
+	for _, imageSize := range imageSizes {
+		if imageSize.IsQuad() {
+			i.CropResize(imageSize)
+		} else {
+			i.Resize(imageSize)
+		}
+	}
 }
 
 // Resize skaliert das Bild auf das angegebene Bildmaß

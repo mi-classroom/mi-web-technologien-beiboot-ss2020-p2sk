@@ -126,10 +126,6 @@ func persistImage() gin.HandlerFunc {
 
 		path := gallery.MakeImageDir(config.UploadDir)
 
-		/*if err != nil {
-			c.Error(err)
-		}*/
-
 		file, _ := fileHeader.Open()
 		defer file.Close()
 		imageInfo, _, _ := image.DecodeConfig(file)
@@ -137,12 +133,12 @@ func persistImage() gin.HandlerFunc {
 		// see https://github.com/gin-gonic/gin/issues/1693
 		fileName := strings.Join([]string{strconv.Itoa(imageInfo.Width), "x", strconv.Itoa(imageInfo.Height), strings.ToLower(filepath.Ext(fileHeader.Filename))}, "")
 
-		fileDest := filepath.Join(config.UploadDir, path, fileName)
+		fileDest := filepath.Join(path, fileName)
 		if err := c.SaveUploadedFile(fileHeader, fileDest); err != nil {
 			c.Error(err)
 		}
 
-		c.Set("image", gallery.Image{fileDest})
+		c.Set("image", gallery.Image{Path: fileDest})
 
 		c.Next()
 		// Wenn im weiteren Verlauf ein Fehler auftritt, sollte
@@ -155,21 +151,16 @@ func scaleImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		image := c.MustGet("image").(gallery.Image)
 
-		for _, s := range config.DefaultImageSizes {
-			if s.IsQuad() {
-				image.CropResize(s)
-			} else {
-				image.Resize(s)
-			}
-		}
+		defaultImageSizes := config.DefaultImageSizes
 
 		// custom scaling
 		scaleValue, scaleExists := c.Get("customScale")
 		if scaleExists {
 			scaleValue, _ = strconv.Atoi(scaleValue.(string))
-			customSize := gallery.FromFactor(scaleValue.(int), image.Width())
-			image.Resize(customSize)
+			defaultImageSizes = append(defaultImageSizes, gallery.FromFactor(scaleValue.(int), image.Width()))
 		}
+
+		image.ProcessImageSizes(defaultImageSizes)
 
 		c.Next()
 	}
@@ -199,7 +190,11 @@ func readImagesFromDir(dir string) map[string]gallery.Gallery {
 
 		if info.IsDir() {
 			lastDir = info.Name()
-			tmpGallery[lastDir] = gallery.Gallery{lastDir, gallery.ColorPalette{}, make([]gallery.Image, 0)}
+			tmpGallery[lastDir] = gallery.Gallery{
+				Dir:        lastDir,
+				ColorMap:   gallery.ColorPalette{},
+				Collection: make([]gallery.Image, 0),
+			}
 			return nil
 		}
 
