@@ -37,6 +37,7 @@ go build
 ### Start the server
 
 ```
+cd backend
 ./backend[.exe]
 ```
 
