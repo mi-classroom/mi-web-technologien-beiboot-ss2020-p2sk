@@ -41,7 +41,6 @@ func init() {
 func main() {
 	if *delete {
 		deleteImages()
-		os.Exit(0)
 	}
 
 	if hasImages() && !*force {
@@ -82,12 +81,10 @@ func deleteImages() {
 			}
 		}
 		os.Exit(0)
-		break
 	default:
 		fmt.Println("Nothing deleted.")
 		os.Exit(0)
 	}
-
 }
 
 func readCharFromStdin() rune {

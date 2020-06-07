@@ -8,31 +8,31 @@ import (
 const testImage = "logos.jpg"
 
 var (
-	imageDummy Image = Image{"testDir/testfile.png"}
+	imageDummy Picture = Picture{"testDir/testfile.png"}
 )
 
 func BenchmarkWidthPerOpenFile(b *testing.B) {
-	image := Image{testImage}
+	picture := Picture{testImage}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		image.Width()
+		picture.Width()
 	}
 }
 
 func BenchmarkWidthPerImage(b *testing.B) {
-	image := Image{testImage}
+	picture := Picture{testImage}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		tmp := image.Image()
+		tmp := picture.Image()
 		tmp.Bounds().Dx()
 	}
 }
 
-func ExampleImage() {
+func ExamplePicture() {
 	fmt.Println(imageDummy)
 
-	image := new(Image)
-	fmt.Print(image)
+	picture := new(Picture)
+	fmt.Print(picture)
 	// Output: {testDir/testfile.png}
 	// &{}
 }
@@ -40,28 +40,28 @@ func ExampleImage() {
 func TestDir(t *testing.T) {
 	got := imageDummy.Dir()
 	if got != "testDir" {
-		t.Errorf("got Image.Dir() = %s; want \"testDir\"", got)
+		t.Errorf("got Picture.Dir() = %s; want \"testDir\"", got)
 	}
 }
 
 func TestName(t *testing.T) {
 	got := imageDummy.Name()
 	if got != "testfile.png" {
-		t.Errorf("got Image.Name() = %s; want \"testfile.png\"", got)
+		t.Errorf("got Picture.Name() = %s; want \"testfile.png\"", got)
 	}
 }
 
 func TestExt(t *testing.T) {
 	got := imageDummy.Ext()
 	if got != ".png" {
-		t.Errorf("got Image.Ext() = %s; want \".png\"", got)
+		t.Errorf("got Picture.Ext() = %s; want \".png\"", got)
 	}
 }
 
 func TestMimeType(t *testing.T) {
 	got := imageDummy.MimeType()
 	if got != "image/png" {
-		t.Errorf("got Image.MimeType() = %s; want \"image/png\"", got)
+		t.Errorf("got Picture.MimeType() = %s; want \"image/png\"", got)
 	}
 }
 

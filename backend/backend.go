@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"html/template"
 	"image"
 	"image/color"
@@ -55,9 +54,6 @@ func prepareServer() {
 
 // Server
 func main() {
-	fmt.Println("Golang Backendkomponente MI-Beibootprojekt")
-	fmt.Println("Picturebox")
-
 	prepareServer()
 
 	// Übersichtseite ausliefern
@@ -75,7 +71,7 @@ func main() {
 		quantizeImage(),
 		func(c *gin.Context) {
 			c.HTML(http.StatusOK, "uploaded.tmpl", gin.H{
-				"uploaded": filepath.ToSlash(c.MustGet("image").(gallery.Image).Path),
+				"uploaded": filepath.ToSlash(c.MustGet("image").(gallery.Picture).Path),
 				"colors":   c.MustGet("colors"),
 				"errors":   c.Errors,
 			})
@@ -90,7 +86,6 @@ func overviewAction() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		images := readImagesFromDir(config.UploadDir)
 		c.HTML(http.StatusOK, "overview.tmpl", gin.H{
-			"title":  "Übersichtsseite",
 			"images": images,
 		})
 	}
@@ -124,21 +119,21 @@ func persistImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		fileHeader := c.MustGet("image").(*multipart.FileHeader)
 
-		path := gallery.MakeImageDir(config.UploadDir)
+		path := gallery.CreatePictureFolder(config.UploadDir)
 
 		file, _ := fileHeader.Open()
 		defer file.Close()
-		imageInfo, _, _ := image.DecodeConfig(file)
+		imageInfo, format, _ := image.DecodeConfig(file)
 
 		// see https://github.com/gin-gonic/gin/issues/1693
-		fileName := strings.Join([]string{strconv.Itoa(imageInfo.Width), "x", strconv.Itoa(imageInfo.Height), strings.ToLower(filepath.Ext(fileHeader.Filename))}, "")
-
+		fileName := gallery.CreateFileName(imageInfo.Width, imageInfo.Height, format)
 		fileDest := filepath.Join(path, fileName)
+
 		if err := c.SaveUploadedFile(fileHeader, fileDest); err != nil {
 			c.Error(err)
 		}
 
-		c.Set("image", gallery.Image{Path: fileDest})
+		c.Set("image", gallery.Picture{Path: fileDest})
 
 		c.Next()
 		// Wenn im weiteren Verlauf ein Fehler auftritt, sollte
@@ -149,7 +144,7 @@ func persistImage() gin.HandlerFunc {
 //
 func scaleImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		image := c.MustGet("image").(gallery.Image)
+		image := c.MustGet("image").(gallery.Picture)
 
 		defaultImageSizes := config.DefaultImageSizes
 
@@ -169,7 +164,7 @@ func scaleImage() gin.HandlerFunc {
 //
 func quantizeImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		image := c.MustGet("image").(gallery.Image)
+		image := c.MustGet("image").(gallery.Picture)
 
 		palette := image.SaveColorPalette(config.ColorFile, config.ColorCount)
 
@@ -179,9 +174,10 @@ func quantizeImage() gin.HandlerFunc {
 }
 
 // Liest alle Bilder aus dem Upload Verzeichnis
-func readImagesFromDir(dir string) map[string]gallery.Gallery {
+func readImagesFromDir(dir string) gallery.Gallery {
 	var lastDir string
-	tmpGallery := make(map[string]gallery.Gallery)
+	tmpGallery := make(gallery.Gallery)
+	//tmpGallery := make(map[string]gallery.Gallery)
 
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() && info.Name() == filepath.Dir(config.UploadDir) {
@@ -190,10 +186,10 @@ func readImagesFromDir(dir string) map[string]gallery.Gallery {
 
 		if info.IsDir() {
 			lastDir = info.Name()
-			tmpGallery[lastDir] = gallery.Gallery{
+			tmpGallery[lastDir] = gallery.PictureContainer{
 				Dir:        lastDir,
 				ColorMap:   gallery.ColorPalette{},
-				Collection: make([]gallery.Image, 0),
+				Collection: make([]gallery.Picture, 0),
 			}
 			return nil
 		}
@@ -215,7 +211,7 @@ func readImagesFromDir(dir string) map[string]gallery.Gallery {
 		path = filepath.ToSlash(path)
 
 		tmpGalerie := tmpGallery[lastDir]
-		tmpGalerie.Collection = append(tmpGalerie.Collection, gallery.Image{Path: path})
+		tmpGalerie.Collection = append(tmpGalerie.Collection, gallery.Picture{Path: path})
 		tmpGallery[lastDir] = tmpGalerie
 		return nil
 	})
