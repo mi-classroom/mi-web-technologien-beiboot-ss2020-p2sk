@@ -4,38 +4,50 @@ import (
 	"encoding/json"
 	"image/color"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 )
 
 const dirMode os.FileMode = 0755
 
 const (
-	ALPHA SortType = iota
-	COLOR
-	DATE
-	RANDOM
+	ALPHA  SortType = "alpha"
+	COLOR           = "color"
+	DATE            = "date"
+	RANDOM          = "random"
 )
 
-type SortType int
+type SortType string
 
 // Gallery hält alle Bilder im Uploadverzeichnis
 //type Gallery map[string]PictureContainer
 type Gallery []PictureContainer
 
-/*func (g Gallery) Sort(by func) {
-	sort.Sort()
-	switch sort {
+func (g Gallery) Sort(by SortType) {
+	switch by {
 	case ALPHA:
+		sort.Slice(g, func(i, j int) bool {
+			return g[i].Dir > g[j].Dir
+		})
 
 	case COLOR:
+		/*sort.Slice(g, func(i, j int) bool {
+			// todo
+		})*/
 	case DATE:
+		sort.Slice(g, func(i, j int) bool {
+			return g[i].Dir < g[j].Dir
+		})
 	case RANDOM:
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(g), func(i, j int) { g[i], g[j] = g[j], g[i] })
 	default:
 	}
 }
-*/
+
 func (g Gallery) Reduce(count int) Gallery {
 	return g[:count]
 }

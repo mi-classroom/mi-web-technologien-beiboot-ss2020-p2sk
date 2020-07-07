@@ -82,12 +82,12 @@ func main() {
 		*/
 		v1.GET("/collections", func(c *gin.Context) {
 			count, _ := strconv.Atoi(c.DefaultQuery("count", "10"))
-			//sort := c.DefaultQuery("sort", "alpha")
+			sort := c.DefaultQuery("sort", "alpha")
 
-			gallery := gallery.LoadGallery(config.UploadDir, config.ColorFile, config.IgnoreFiles)
-			//gallery = gallery.SortBy(sort)
+			galleryObj := gallery.LoadGallery(config.UploadDir, config.ColorFile, config.IgnoreFiles)
+			galleryObj.Sort(gallery.SortType(sort))
 
-			c.JSON(http.StatusOK, gallery.Reduce(count))
+			c.JSON(http.StatusOK, galleryObj.Reduce(count))
 		})
 
 		// Liefert alle Bilder einer Collection
@@ -96,7 +96,6 @@ func main() {
 
 		// Liefert ein bestimmtes Bild
 		//v1.GET("/collections/:dirId/:pictureName")
-
 	}
 
 	server.Run()
