@@ -9,6 +9,7 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/disintegration/imaging"
 	"github.com/ericpauley/go-quantize/quantize"
@@ -16,13 +17,25 @@ import (
 
 const fileTemplate = "%dx%d.%s"
 
+// CreateFileName erstellt einen Dateinamen
 func CreateFileName(width, height int, format string) string {
 	return fmt.Sprintf(fileTemplate, width, height, format)
 }
 
 // Picture Model
 type Picture struct {
-	Path string
+	Path string `json:"path"`
+}
+
+func (p Picture) MarshalJSON() ([]byte, error) {
+	jsonMap := map[string]string{
+		"name":   p.Name(),
+		"uri":    "todo",
+		"width":  strconv.Itoa(p.Size().Width),
+		"height": strconv.Itoa(p.Size().Height),
+	}
+	//print(p.Path)
+	return json.Marshal(jsonMap)
 }
 
 // Dir liefert den Pfad des Bildes

@@ -1,22 +1,124 @@
 package gallery
 
 import (
+	"encoding/json"
 	"image/color"
+	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 )
 
 const dirMode os.FileMode = 0755
 
+const (
+	ALPHA  SortType = "alpha"
+	COLOR           = "color"
+	DATE            = "date"
+	RANDOM          = "random"
+)
+
+type SortType string
+
 // Gallery hält alle Bilder im Uploadverzeichnis
-type Gallery map[string]PictureContainer
+//type Gallery map[string]PictureContainer
+type Gallery []PictureContainer
+
+func (g Gallery) Sort(by SortType) {
+	switch by {
+	case ALPHA:
+		sort.Slice(g, func(i, j int) bool {
+			return g[i].Dir > g[j].Dir
+		})
+
+	case COLOR:
+		/*sort.Slice(g, func(i, j int) bool {
+			// todo
+		})*/
+	case DATE:
+		sort.Slice(g, func(i, j int) bool {
+			return g[i].Dir < g[j].Dir
+		})
+	case RANDOM:
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(g), func(i, j int) { g[i], g[j] = g[j], g[i] })
+	default:
+	}
+}
+
+func (g Gallery) Reduce(count int) Gallery {
+	return g[:count]
+}
+
+// LoadGallery lädt alle Bilder und liefert ein Gallery Objekt zurück
+func LoadGallery(imageBaseDir string, colorFile string, ignoreFiles []string) Gallery {
+	var currentDir string
+	var tempContainer PictureContainer
+	tempGallery := make(Gallery, 0)
+
+	filepath.Walk(imageBaseDir, func(path string, info os.FileInfo, err error) error {
+		// das Uploadverzeichnis ignorieren
+		if info.IsDir() && info.Name() == filepath.Dir(imageBaseDir) {
+			return err
+		}
+
+		// weitere Dateien ignorieren
+		if stringInSlice(ignoreFiles, filepath.Base(path)) {
+			return nil
+		}
+
+		// wurde ein Verzeichnis gefunden neues PictureContainer erstellen
+		if info.IsDir() {
+			if currentDir != "" {
+				tempGallery = append(tempGallery, tempContainer)
+			}
+			//tempGallery[lastDir]
+			currentDir = info.Name()
+			tempContainer = PictureContainer{
+				Dir:        currentDir,
+				ColorMap:   ColorPalette{},
+				Collection: make([]Picture, 0),
+			}
+			return nil
+		}
+
+		if info.Name() == colorFile {
+			var rgba ColorPalette
+			//tmp := tempGallery[lastDir]
+			data, _ := ioutil.ReadFile(path)
+
+			json.Unmarshal(data, &rgba)
+			//tmp.ColorMap = rgba
+			tempContainer.ColorMap = rgba
+
+			return nil
+		}
+
+		// Ab hier haben wir ein Bild gefunden
+		// Pfadseperator / Unix/Windows
+		tempContainer.Collection = append(tempContainer.Collection, Picture{Path: filepath.ToSlash(path)})
+		return nil
+	})
+
+	return tempGallery
+}
+
+func stringInSlice(s []string, needle string) bool {
+	for _, item := range s {
+		if item == needle {
+			return true
+		}
+	}
+	return false
+}
 
 // PictureContainer stellt Informationen eines Bildes bereit
 type PictureContainer struct {
-	Dir        string
-	ColorMap   ColorPalette
-	Collection Collection
+	Dir        string       `json:"id"`
+	ColorMap   ColorPalette `json:"colors"`
+	Collection Collection   `json:"images"`
 }
 
 // CreatePictureFolder ...
@@ -26,15 +128,6 @@ func CreatePictureFolder(uploadDir string) string {
 	os.Mkdir(path, dirMode)
 	return path
 }
-
-// ToScrset liefert pro Sammlung den scrset
-/*func (pc PictureContainer) ToScrset() string {
-	var scrset []string
-	for _, i := range pc.Collection {
-		scrset = append(scrset, i.Path+" "+strconv.Itoa(i.Width())+"w")
-	}
-	return strings.Join(scrset, ", ")
-}*/
 
 // Collection stellt zu einem Bild alle Referenzen/Größen dar
 type Collection []Picture
@@ -52,7 +145,7 @@ func (c Collection) GetPreviewPicture() Picture {
 // ColorPalette beschreibt eine Sammlung von Farben
 type ColorPalette []color.RGBA
 
-// NewColorPalette ...
+// NewColorPalette erzeugt ein neues ColorPalette Objekt
 func NewColorPalette(palette color.Palette) ColorPalette {
 	fp := make(ColorPalette, len(palette))
 	for i, c := range palette {

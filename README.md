@@ -92,6 +92,43 @@ Use the `-h` parameter to see all the possible flags. For example use `-c <int>`
 go run scaffolding.go -h
 ```
 
+## REST API v1
+
+The Backend provides a REST API for accessing the existing image collections. The API is accessible via the URI `/rest/v1/collections`. The collections can be retrieved via GET requests.
+
+The collections can also be restricted and sorted using query parameters. To determine the number of collections, use the parameter `count`. The values `alpha`, `color`, `date`, and `random` are available for sorting parameter `sort`. The defaults are `count=10` and `sort=alpha`.
+
+For example:
+
+```
+GET http://localhost:8080/rest/v1/collections?count=10&sort=alpha <- this would also be the default
+
+GET http://localhost:8080/rest/v1/collections?sort=random
+```
+
+The API delivers a JSON in the following format.
+
+```
+[{
+    id: <id>,
+    images: [{
+        name: <name>,
+        width: <width>,
+        height: <height>,
+    }],
+    colors: [
+        {
+            R: <r>
+            G: <g>
+            B: <b>
+            A: <a>
+        }
+    ]
+    },
+... 
+]
+```
+
 ## License
 
 This project is licensed under the terms of the MIT license. See [License](LICENSE.md).
