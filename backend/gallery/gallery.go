@@ -102,6 +102,7 @@ func LoadGallery(imageBaseDir string, colorFile string, ignoreFiles []string) Ga
 		return nil
 	})
 
+	tempGallery = append(tempGallery, tempContainer)
 	return tempGallery
 }
 
@@ -143,13 +144,13 @@ func (c Collection) GetPreviewPicture() Picture {
 }
 
 // ColorPalette beschreibt eine Sammlung von Farben
-type ColorPalette []color.RGBA
+type ColorPalette []color.NRGBA
 
 // NewColorPalette erzeugt ein neues ColorPalette Objekt
 func NewColorPalette(palette color.Palette) ColorPalette {
 	fp := make(ColorPalette, len(palette))
 	for i, c := range palette {
-		fp[i] = c.(color.RGBA)
+		fp[i] = c.(color.NRGBA)
 	}
 	return fp
 }

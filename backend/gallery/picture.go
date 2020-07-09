@@ -11,14 +11,17 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/RobCherry/vibrant"
 	"github.com/disintegration/imaging"
-	"github.com/ericpauley/go-quantize/quantize"
 )
 
-const fileTemplate = "%dx%d.%s"
+const fileTemplate = "%dx%d%s"
 
 // CreateFileName erstellt einen Dateinamen
 func CreateFileName(width, height int, format string) string {
+	if format[:1] != "." {
+		format = "." + format
+	}
 	return fmt.Sprintf(fileTemplate, width, height, format)
 }
 
@@ -135,9 +138,20 @@ func (p Picture) CropResize(size ImageSize) {
 
 // Quantize erstellt eine Farbpalette
 func (p Picture) quantize(count int) ColorPalette {
-	medianCutQuantizer := quantize.MedianCutQuantizer{}
-	quantizePalette := medianCutQuantizer.Quantize(make([]color.Color, 0, count), p.Image())
-	colorPalette := NewColorPalette(quantizePalette)
+	palette := vibrant.NewPaletteBuilder(p.Image()).
+		MaximumColorCount(uint32(count)).
+		Generate()
+
+	var colorPalette ColorPalette
+
+	for _, swatch := range palette.Swatches() {
+		colorPalette = append(colorPalette, swatch.Color().(color.NRGBA))
+	}
+
+	/*sort.Sort(colorPalette, func() {
+
+	})*/
+
 	return colorPalette
 }
 

@@ -129,7 +129,7 @@ func saveImage(url string) gallery.Picture {
 
 	imageConfig, format, _ := image.DecodeConfig(bytes.NewReader(body))
 
-	fileName := fmt.Sprintf("%dx%d.%s", imageConfig.Width, imageConfig.Height, format)
+	fileName := gallery.CreateFileName(imageConfig.Width, imageConfig.Height, format)
 	imageDir := gallery.CreatePictureFolder(uploadDir)
 	path := filepath.Join(imageDir, fileName)
 

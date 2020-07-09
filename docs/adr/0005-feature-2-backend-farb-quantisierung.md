@@ -1,6 +1,6 @@
 # Quantisierung mit Paket go-quantize
 
-* Status: akzeptiert
+* Status: ersetzt durch [ADR-0010](0010-feature-2-vibrant-as-new-color-quantizer.md)
 * Workload: 8h
 * Datum: 2020-04-16
 
