@@ -120,7 +120,7 @@ func getURLData(url string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func saveImage(url string) gallery.Image {
+func saveImage(url string) gallery.Picture {
 	body, err := getURLData(url)
 
 	if err != nil {
@@ -129,8 +129,8 @@ func saveImage(url string) gallery.Image {
 
 	imageConfig, format, _ := image.DecodeConfig(bytes.NewReader(body))
 
-	fileName := fmt.Sprintf("%dx%d.%s", imageConfig.Width, imageConfig.Height, format)
-	imageDir := gallery.MakeImageDir(uploadDir)
+	fileName := gallery.CreateFileName(imageConfig.Width, imageConfig.Height, format)
+	imageDir := gallery.CreatePictureFolder(uploadDir)
 	path := filepath.Join(imageDir, fileName)
 
 	image, _, err := image.Decode(bytes.NewReader(body))
@@ -141,5 +141,5 @@ func saveImage(url string) gallery.Image {
 
 	file, _ := os.Create(path)
 	jpeg.Encode(file, image, &jpeg.Options{Quality: defaultQuality})
-	return gallery.Image{Path: path}
+	return gallery.Picture{Path: path}
 }

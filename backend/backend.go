@@ -1,36 +1,25 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"html/template"
 	"image"
 	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"./config"
 	"./gallery"
 	"github.com/gin-gonic/gin"
 )
 
-func stringInSlice(s []string, needle string) bool {
-	for _, item := range s {
-		if item == needle {
-			return true
-		}
-	}
-	return false
-}
-
-func toCSS(c color.RGBA) template.CSS {
+func toCSS(c color.NRGBA) template.CSS {
 	s := "background-color: rgba(" + strings.Join([]string{strconv.Itoa(int(c.R)), strconv.Itoa(int(c.G)), strconv.Itoa(int(c.B)), strconv.Itoa(int(c.A))}, ", ") + ");"
 	return template.CSS(s)
 }
@@ -78,13 +67,44 @@ func main() {
 		},
 	)
 
+	// REST API
+	v1 := server.Group("/rest/v1")
+	{
+		v1.GET("/ping", func(c *gin.Context) {
+			c.JSON(http.StatusOK, time.Now())
+		})
+
+		/**
+		Liefert alle CollectionIDs (Dirnames)
+		@TODO JSON
+		?count=int
+		?sort=[alpha|date|color|random]
+		*/
+		v1.GET("/collections", func(c *gin.Context) {
+			count, _ := strconv.Atoi(c.DefaultQuery("count", "10"))
+			sort := c.DefaultQuery("sort", "alpha")
+
+			galleryObj := gallery.LoadGallery(config.UploadDir, config.ColorFile, config.IgnoreFiles)
+			galleryObj.Sort(gallery.SortType(sort))
+
+			c.JSON(http.StatusOK, galleryObj.Reduce(count))
+		})
+
+		// Liefert alle Bilder einer Collection
+		// @TODO JSON
+		//v1.GET("/collections/:dirId")
+
+		// Liefert ein bestimmtes Bild
+		//v1.GET("/collections/:dirId/:pictureName")
+	}
+
 	server.Run()
 }
 
 // Endpunkt Bildübersicht
 func overviewAction() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		images := readImagesFromDir(config.UploadDir)
+		images := gallery.LoadGallery(config.UploadDir, config.ColorFile, config.IgnoreFiles)
 		c.HTML(http.StatusOK, "overview.tmpl", gin.H{
 			"images": images,
 		})
@@ -171,50 +191,4 @@ func quantizeImage() gin.HandlerFunc {
 		c.Set("colors", palette)
 		c.Next()
 	}
-}
-
-// Liest alle Bilder aus dem Upload Verzeichnis
-func readImagesFromDir(dir string) gallery.Gallery {
-	var lastDir string
-	tmpGallery := make(gallery.Gallery)
-	//tmpGallery := make(map[string]gallery.Gallery)
-
-	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() && info.Name() == filepath.Dir(config.UploadDir) {
-			return err
-		}
-
-		if info.IsDir() {
-			lastDir = info.Name()
-			tmpGallery[lastDir] = gallery.PictureContainer{
-				Dir:        lastDir,
-				ColorMap:   gallery.ColorPalette{},
-				Collection: make([]gallery.Picture, 0),
-			}
-			return nil
-		}
-
-		if stringInSlice(config.IgnoreFiles, filepath.Base(path)) {
-			return nil
-		}
-
-		if info.Name() == config.ColorFile {
-			var rgba gallery.ColorPalette
-			tmp := tmpGallery[lastDir]
-			data, _ := ioutil.ReadFile(path)
-
-			json.Unmarshal(data, &rgba)
-			tmp.ColorMap = rgba
-			tmpGallery[lastDir] = tmp
-		}
-		// Pfadseperator / Unix/Windows
-		path = filepath.ToSlash(path)
-
-		tmpGalerie := tmpGallery[lastDir]
-		tmpGalerie.Collection = append(tmpGalerie.Collection, gallery.Picture{Path: path})
-		tmpGallery[lastDir] = tmpGalerie
-		return nil
-	})
-
-	return tmpGallery
 }
