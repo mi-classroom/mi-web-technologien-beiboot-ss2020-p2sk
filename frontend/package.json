@@ -1,0 +1,31 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "Frontend Umgebung für das Beiboot Projekt im Modul Web Technologien im SS 2020",
+  "main": "server.js",
+  "dependencies": {
+    "sass": "^1.26.10",
+    "typescript": "^3.9.7"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^3.8.0",
+    "@typescript-eslint/parser": "^3.8.0",
+    "eslint": "^7.6.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "nodemon": "^2.0.4"
+  },
+  "scripts": {
+    "start": "npm run build & npm run tsc:watch & node server.js",
+    "start:dev": "sass --watch styles/:public/css & tsc -w & nodemon server.js",
+    "sass:prod": "sass styles/:public/css",
+    "eslint:check": "eslint src/**",
+    "eslint:fix": "eslint --fix src/**",
+    "tsc": "tsc"
+  },
+  "author": "Pascal Schorde",
+  "license": "MIT"
+}
