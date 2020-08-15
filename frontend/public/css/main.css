@@ -41,9 +41,13 @@ body {
   font-size: xx-large;
 }
 
-/* 
+/*  
 *   text 
 */
+.text {
+  font-stretch: condensed;
+}
+
 .text-align-center {
   text-align: center;
 }
