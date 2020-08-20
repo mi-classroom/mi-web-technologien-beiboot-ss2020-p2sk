@@ -8,7 +8,7 @@ Please be aware that you have two different uris to access the backend service. 
 
 ## Features
 
-* Sass/Scss www.sass.org
+* Sass/Scss
 * Typescript
 * Eslint
 * nodemon
@@ -18,6 +18,7 @@ https://github.com/cloudhead/node-static
 
 ## Directory structure
 
+The server.js will serve the `public` folder. That means all importand files have to go here.
 
 
 ## Development Mode
@@ -30,33 +31,24 @@ docker-compose logs -f frontend
 
 ### Wachter
 
+The watchers are running in parallel.
+
 #### Sass/Scass
 
 The sass watcher will compile all style files from `styles/` to `public/css/`.
 
 #### Typescript
 
-The typescript/javascript files will also be watched and if changes happen gets compiled from `src/` to `public/js/`. The typescript is configured in `tsconfig.json` and will compile `*.js` files too. More infos can be found here https://www.typescriptlang.org/tsconfig.
+The typescript/javascript files will also be watched and if changes happen gets compiled from `src/` to `public/js/`. The typescript is configured in `tsconfig.json` and will compile `*.js` files too. More infos about the `tsconfig.json` can be found here https://www.typescriptlang.org/tsconfig. General infos about typescript can be found in the official docs https://www.typescriptlang.org/docs.
 
 #### Eslint
 
-Styleguide options config autofix beschreiben.
-
-### 
-
-Will
-
-
-The node_modules folder will only exists in the container. Therefore ?
-
-0. Container muss beim ersten Start Module (+dev) installieren node_modules?
-1. Container startet server.js, und die watcher (sass, eslint-watch und tsc) parallel
-2. per docker-compose logs -f frontend lässt sich der output überwachen
+todo
 
 
 ## Production Mode
 
-docker-compose exec -u root frontend ./node_modules/.bin/node-minify -c uglify-es -i public/js/script.js -o public/js/script.min.js --option '{"mangle": true}'
+In production mode the files will be compiled and minified.
 
 ## Whats missing
 
