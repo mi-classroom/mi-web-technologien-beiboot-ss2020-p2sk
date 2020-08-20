@@ -1,4 +1,8 @@
 {
     "verbose": true,
-    "ignore": ["src/*", "public/*"]
+    "ignore": [
+    ],
+    "watch": [
+        "public/"
+    ]
 }
