@@ -1,0 +1,31 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "Frontend Umgebung für das Beiboot Projekt im Modul Web Technologien im SS 2020",
+  "main": "server.js",
+  "dependencies": {
+    "@node-minify/cli": "^6.0.0",
+    "@node-minify/uglify-es": "^6.0.0",
+    "eslint": "^7.6.0",
+    "node-static": "^0.7.11",
+    "sass": "^1.26.10",
+    "typescript": "^3.9.7"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^3.8.0",
+    "@typescript-eslint/parser": "^3.8.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "eslint-watch": "^7.0.0"
+  },
+  "scripts": {
+    "start": "npm run start:$NODE_ENV",
+    "start:development": "sass --watch styles/:public/css & tsc -w --preserveWatchOutput true & esw -w --fix & node --inspect server.js",
+    "start:production": "sass styles/:public/css && tsc && npx node-minify -c uglify-es -i public/js/script.js -o public/js/script.js && node server.js"
+  },
+  "author": "Pascal Schorde",
+  "license": "MIT"
+}

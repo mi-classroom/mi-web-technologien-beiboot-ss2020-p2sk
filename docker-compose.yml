@@ -1,6 +1,6 @@
 version: "3.7"
 services: 
-    backend-golang-server:
+    backend:
         build: 
             context: ./backend
             dockerfile: Dockerfile
@@ -8,3 +8,21 @@ services:
             - "8080:8080"
         volumes: 
             - ./backend:/backend
+
+    frontend:
+        #image: "node:buster"
+        build: ./frontend
+        user: "node"
+        depends_on: 
+            - backend
+        environment:
+            - NODE_ENV=development
+        volumes: 
+            - ./frontend:/home/node/app
+            - /home/node/app/node_modules
+        ports:
+            - "8081:8081"
+        expose:
+            - "8081"
+        command: "npm run start"
+        working_dir : /home/node/app

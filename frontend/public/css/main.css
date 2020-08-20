@@ -1,0 +1,80 @@
+/* Color Theme Swatches in Hex */
+/* From Adobe Color Trends */
+/* https://color.adobe.com/trends */
+/*
+*   Variables
+*/
+/* Color Theme Swatches in RGBA */
+/* Color Theme Swatches in HSLA */
+/*
+*   include variables
+*/
+/*
+*   A little bit boilerplate
+*/
+html {
+  font: 100% Helvetica, sans-serif;
+  background-color: #D7D7D9;
+  color: #184059;
+}
+
+body {
+  margin: 0;
+  padding-top: 2em;
+}
+
+/* 
+*   flex
+*/
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  justify-content: center;
+}
+
+/*
+* Headings
+*/
+.h1 {
+  font-size: xx-large;
+}
+
+/*  
+*   text 
+*/
+.text {
+  font-stretch: condensed;
+}
+
+.text-align-center {
+  text-align: center;
+}
+
+.text-color-travel-1,
+.text-color-light {
+  color: #D7D7D9;
+}
+
+.text-color-travel-2,
+.text-color-dark-blue {
+  color: #184059;
+}
+
+.text-color-travel-3,
+.text-color-light-blue {
+  color: #5D8AA6;
+}
+
+.text-color-travel-4,
+.text-color-orange {
+  color: #BF7B3F;
+}
+
+.text-color-travel-5,
+.text-color-dark-red {
+  color: #8C2F1B;
+}
+
+/*# sourceMappingURL=main.css.map */

@@ -70,6 +70,11 @@ func main() {
 	// REST API
 	v1 := server.Group("/rest/v1")
 	{
+		v1.Use(func(c *gin.Context) {
+			c.Header("Access-Control-Allow-Origin", "*")
+			c.Next()
+		})
+
 		v1.GET("/ping", func(c *gin.Context) {
 			c.JSON(http.StatusOK, time.Now())
 		})

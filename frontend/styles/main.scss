@@ -1,0 +1,74 @@
+/*
+*   include variables
+*/
+@use 'vars';
+
+/*
+*   A little bit boilerplate
+*/
+html {
+    font: 100% vars.$font-stack;
+    background-color: vars.$Travel-1-hex;
+    color: vars.$Travel-2-hex;
+}
+
+body {
+    margin: 0;
+    padding-top: 2em;
+}
+
+
+/* 
+*   flex
+*/
+.flex {
+    display: flex;
+}
+
+.flex-center {
+    justify-content: center;
+}
+
+/*
+* Headings
+*/
+
+.h1 {
+    font-size: xx-large;
+}
+
+/*  
+*   text 
+*/
+.text {
+    font-stretch: condensed;
+}
+
+.text-align-center {
+    text-align: center;
+}
+
+.text-color-travel-1,
+.text-color-light {
+    color: vars.$Travel-1-hex;
+}
+
+.text-color-travel-2,
+.text-color-dark-blue {
+    color: vars.$Travel-2-hex;
+}
+
+.text-color-travel-3,
+.text-color-light-blue {
+    color: vars.$Travel-3-hex;
+}
+
+.text-color-travel-4,
+.text-color-orange {
+    color: vars.$Travel-4-hex;
+}
+
+.text-color-travel-5,
+.text-color-dark-red {
+    color: vars.$Travel-5-hex;
+}
