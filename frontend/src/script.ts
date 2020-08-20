@@ -1,7 +1,27 @@
+class BackendClient {
+    private baseUri: string = 'http://localhost:8080/rest/v1/'
 
-const backendUri = 'http://localhost:8080/rest/v1/collections'
+    private pingRoute: string = 'ping'
 
-let collectionRequest = new Request(backendUri)
+    private collectionsRoute: string = 'collections'
+
+    private countQuery: string = 'count=%d'
+
+    isOnline(handler:Function) {
+
+    }
+
+    request(handleData:any, handleError:any) {
+        let request = new Request(this.baseUri + this.collectionsRoute)
+
+        fetch(request)
+        .then(res => res.json())
+        .then(handleData)
+        .catch(handleError)
+    }
+}
+
+//let collectionRequest = new Request(backendUri)
 
 let handleJsonData = function(data) {
     let outputElement = document.getElementById('json-output')
@@ -11,9 +31,10 @@ let handleJsonData = function(data) {
     console.log(data)
 }
 
-fetch(collectionRequest) 
-.then(res => res.json())
-.then(handleJsonData)
-.catch(error => {
+let handleError = function(error) {
     console.error('Error:', error)
-})
+}
+
+let client = new BackendClient
+
+client.request(handleJsonData, handleError)
