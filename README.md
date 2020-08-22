@@ -36,7 +36,7 @@ docker-compose up -d
 
 If you start the container for the first time, docker will download the images and build the container.
 
-### Overserve container state
+### Observe container state
 
 To check if the containers are running use the follow command.
 
@@ -55,12 +55,12 @@ You will most likly see somthing like this.
 
 ### Open in browser
 
-The backend is reachable over [localhost:8080](localhost:8080) and comes with its own little user interface.
-For the frontend open [localhost:8081](localhost:8081).
+The backend is reachable over [localhost:8080](http://localhost:8080) and comes with its own little user interface.
+For the frontend open [localhost:8081](http://localhost:8081).
 
 ### Monitor the container output
 
-Especially in `development` mode you will receive valuable feedback from the different watchers, running in the `frontend` container background. See [frontend README](frontend/README.md#watchers). To oberserve these use this command. The `-f` option will continue the output. To abort use `Ctrl+c`.
+Especially in `development` mode you will receive valuable feedback from the different watchers, running in the `frontend` container background. See [frontend README](frontend/README.md#watchers). To observe these use this command. The `-f` option will continue the output. To abort use `Ctrl+c`.
 
 ```
 docker-compose logs -f [frontend|backend]
@@ -73,10 +73,6 @@ To stop the container use the following command.
 ```
 docker-compose down [--remove-orphans]
 ```
-
-### Switch environment
-
-
 
 ## How to contribute
 

@@ -54,6 +54,14 @@ docker-compose exec backend go run scaffolding/scaffolding.go -h
 
 Use the `-h` parameter to see all the possible flags. For example use `-c <int>` to specify the image count to download and `-d` to clear the `uploads/` dir.
 
+```
+Usage of scaffolding
+  -c int    the image count to scaffold (default 20)
+  -d        DELETE all images from the upload dir
+  -f        force the download if upload dir has images
+  -p int    the page number to download from (default 1)
+```
+
 ## REST API v1
 
 The Backend provides a REST API for accessing the existing image collections. The API is accessible via the URI `<host>/rest/v1/collections`. The collections can be retrieved via GET requests.
@@ -103,7 +111,7 @@ The API delivers a JSON in the following format.
 ]
 ```
 
-The `uri` will be relativ to the host `uploads/<id>/<name>`. So you have to add the hostname by yourself.
+The `uri` will be relativ to the host `uploads/<id>/<name>`. So you have to add the hostname in your client app.
 
 ## Decoupled frontend dev environment with docker
 
