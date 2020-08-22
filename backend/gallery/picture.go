@@ -107,7 +107,7 @@ func (p Picture) ProcessImageSizes(imageSizes []ImageSize) {
 // Resize skaliert das Bild auf das angegebene Bildmaß
 func (p Picture) Resize(size ImageSize) {
 	resized := imaging.Resize(p.Image(), size.Width, size.Height, imaging.Lanczos)
-	newFile := filepath.Join(p.Dir(), CreateFileName(size.Width, size.Height, p.Ext()))
+	newFile := filepath.Join(p.Dir(), CreateFileName(resized.Rect.Dx(), resized.Rect.Dy(), p.Ext()))
 	imaging.Save(resized, newFile)
 }
 
@@ -130,11 +130,6 @@ func (p Picture) CropResize(size ImageSize) {
 	newFile := filepath.Join(p.Dir(), CreateFileName(size.Width, size.Height, p.Ext()))
 	imaging.Save(resized, newFile)
 }
-
-/*func saveImage(image image.Image, size ImageSize) {
-	newFile := filepath.Join(p.Dir(), CreateFileName(size.Width, size.Height, p.Ext()))
-	imaging.Save(resized, newFile)
-}*/
 
 // Quantize erstellt eine Farbpalette
 //func (p Picture) quantize(count int) ColorPalette {
