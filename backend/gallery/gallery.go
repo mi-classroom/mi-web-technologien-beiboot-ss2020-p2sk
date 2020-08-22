@@ -51,6 +51,9 @@ func (g Gallery) Sort(by SortType) {
 }
 
 func (g Gallery) Reduce(count int) Gallery {
+	available 	if count > len(g) {
+		return g[:len(g)]
+	}
 	return g[:count]
 }
 
