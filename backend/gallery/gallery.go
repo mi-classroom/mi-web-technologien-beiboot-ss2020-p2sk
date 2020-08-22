@@ -158,10 +158,10 @@ func (c Collection) GetPreviewPicture() Picture {
 
 // Color repräsentiert eine quantifizierte Farbe
 type Color struct {
-	RGBA     color.NRGBA
-	HSL      vibrant.HSL
-	Quantity uint32
-	Vibrant  string
+	RGBA     color.NRGBA `json:"rgba"`
+	HSL      vibrant.HSL `json:"hsl"`
+	Quantity uint32      `json:"quantity"`
+	Vibrant  string      `json:"vibrant"`
 }
 
 // ColorPalette beschreibt die häufigsten Farben des Bildes in unterschiedlichen Formaten
