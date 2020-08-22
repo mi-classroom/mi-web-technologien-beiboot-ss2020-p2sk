@@ -36,9 +36,9 @@ func (g Gallery) Sort(by SortType) {
 		})
 
 	case COLOR:
-		/*sort.Slice(g, func(i, j int) bool {
-			// todo
-		})*/
+		sort.Slice(g, func(i, j int) bool {
+			return g[i].ColorMap.Vibrant().HSL.H > g[j].ColorMap.Vibrant().HSL.H
+		})
 	case DATE:
 		sort.Slice(g, func(i, j int) bool {
 			return g[i].Dir < g[j].Dir
@@ -50,11 +50,19 @@ func (g Gallery) Sort(by SortType) {
 	}
 }
 
-func (g Gallery) Reduce(count int) Gallery {
-	available 	if count > len(g) {
-		return g[:len(g)]
+func (g Gallery) Reduce(from, count int) Gallery {
+	if count > len(g) {
+		return g
 	}
-	return g[:count]
+	if from > len(g) {
+		return g[0:count]
+	}
+
+	to := count + from
+	if to > len(g) {
+		return g[len(g)-count:]
+	}
+	return g[from:to]
 }
 
 // LoadGallery lädt alle Bilder und liefert ein Gallery Objekt zurück
@@ -150,7 +158,7 @@ func (c Collection) GetPreviewPicture() Picture {
 
 // Color repräsentiert eine quantifizierte Farbe
 type Color struct {
-	NRGBA    color.NRGBA
+	RGBA     color.NRGBA
 	HSL      vibrant.HSL
 	Quantity uint32
 	Vibrant  string
@@ -158,6 +166,28 @@ type Color struct {
 
 // ColorPalette beschreibt die häufigsten Farben des Bildes in unterschiedlichen Formaten
 type ColorPalette []Color
+
+// Vibrant gibt die Vibrant Farbe, oder wenn diese nicht vorhanden ist die häufigste zurück.
+func (cp ColorPalette) Vibrant() Color {
+	var vibrant Color
+	var mostCommon Color
+
+	for _, color := range cp {
+		if color.Vibrant == "vibrant" {
+			vibrant = color
+		}
+
+		if mostCommon.Quantity < color.Quantity {
+			mostCommon = color
+		}
+	}
+
+	if &vibrant == nil {
+		return mostCommon
+	}
+
+	return vibrant
+}
 
 // NewColorPalette erzeugt ein neues ColorPalette Objekt
 /* func NewColorPalette(palette color.Palette) ColorPalette {
