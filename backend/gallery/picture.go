@@ -33,7 +33,7 @@ type Picture struct {
 func (p Picture) MarshalJSON() ([]byte, error) {
 	jsonMap := map[string]string{
 		"name":   p.Name(),
-		"uri":    "todo",
+		"uri":    p.Path,
 		"width":  strconv.Itoa(p.Size().Width),
 		"height": strconv.Itoa(p.Size().Height),
 	}
@@ -116,7 +116,6 @@ func (p Picture) Resize(size ImageSize) {
 func (p Picture) CropResize(size ImageSize) {
 	var cropped *image.NRGBA
 	currentImageSize := p.Size()
-	//dx, dy := image.Bounds().Dx(), image.Bounds().Dy()
 
 	if currentImageSize.Width > currentImageSize.Height {
 		cropped = imaging.CropCenter(p.Image(), currentImageSize.Height, currentImageSize.Height)
@@ -124,8 +123,6 @@ func (p Picture) CropResize(size ImageSize) {
 		cropped = imaging.CropCenter(p.Image(), currentImageSize.Width, currentImageSize.Width)
 	}
 	resized := imaging.Resize(cropped, size.Width, 0, imaging.Lanczos)
-
-	//dx, dy = resized.Bounds().Dx(), resized.Bounds().Dy()
 
 	newFile := filepath.Join(p.Dir(), CreateFileName(size.Width, size.Height, p.Ext()))
 	imaging.Save(resized, newFile)
@@ -142,7 +139,7 @@ func (p Picture) quantize(count int) ColorPalette {
 
 	for _, swatch := range palette.Swatches() {
 		newColor := new(Color)
-		newColor.NRGBA = swatch.Color().(color.NRGBA)
+		newColor.RGBA = swatch.Color().(color.NRGBA)
 		newColor.HSL = swatch.HSL()
 		newColor.Quantity = swatch.Population()
 
