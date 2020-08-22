@@ -70,6 +70,7 @@ func main() {
 	// REST API
 	v1 := server.Group("/rest/v1")
 	{
+		// Allow CSRF from everywhere
 		v1.Use(func(c *gin.Context) {
 			c.Header("Access-Control-Allow-Origin", "*")
 			c.Next()
@@ -83,24 +84,19 @@ func main() {
 		Liefert alle CollectionIDs (Dirnames)
 		@TODO JSON
 		?count=int
+		?from=int
 		?sort=[alpha|date|color|random]
 		*/
 		v1.GET("/collections", func(c *gin.Context) {
 			count, _ := strconv.Atoi(c.DefaultQuery("count", "10"))
+			from, _ := strconv.Atoi(c.DefaultQuery("from", "0"))
 			sort := c.DefaultQuery("sort", "alpha")
 
 			galleryObj := gallery.LoadGallery(config.UploadDir, config.ColorFile, config.IgnoreFiles)
 			galleryObj.Sort(gallery.SortType(sort))
 
-			c.JSON(http.StatusOK, galleryObj.Reduce(count))
+			c.JSON(http.StatusOK, galleryObj.Reduce(from, count))
 		})
-
-		// Liefert alle Bilder einer Collection
-		// @TODO JSON
-		//v1.GET("/collections/:dirId")
-
-		// Liefert ein bestimmtes Bild
-		//v1.GET("/collections/:dirId/:pictureName")
 	}
 
 	server.Run()
