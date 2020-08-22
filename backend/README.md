@@ -56,14 +56,14 @@ Use the `-h` parameter to see all the possible flags. For example use `-c <int>`
 
 ## REST API v1
 
-The Backend provides a REST API for accessing the existing image collections. The API is accessible via the URI `/rest/v1/collections`. The collections can be retrieved via GET requests.
+The Backend provides a REST API for accessing the existing image collections. The API is accessible via the URI `<host>/rest/v1/collections`. The collections can be retrieved via GET requests.
 
-The collections can also be restricted and sorted using query parameters. To determine the number of collections, use the parameter `count`. The values `alpha`, `color`, `date`, and `random` are available for sorting parameter `sort`. The defaults are `count=10` and `sort=alpha`.
+The collections can also be restricted and sorted using query parameters. To determine the number of collections, use the parameter `count`. With `from` you can set the startposition. The values `alpha`, `color`, `date`, and `random` are available for the sorting parameter `sort`. The defaults are `count=10`, `from=0` and `sort=alpha`.
 
 For example:
 
 ```
-GET http://localhost:8080/rest/v1/collections?count=10&sort=alpha <- this would also be the default
+GET http://localhost:8080/rest/v1/collections?count=10&from=0&sort=alpha <- this would also be the default
 
 GET http://localhost:8080/rest/v1/collections?sort=random
 ```
@@ -72,24 +72,38 @@ The API delivers a JSON in the following format.
 
 ```
 [{
-    id: <id>,
+    id: <int>,
     images: [{
-        name: <name>,
-        width: <width>,
-        height: <height>,
+        name: <string>,
+        uri: <string>,
+        width: <int>,
+        height: <int>,
+        orientation: <string>
     }],
     colors: [
-        {
-            R: <r>
-            G: <g>
-            B: <b>
-            A: <a>
-        }
+         {
+            "rgba": {
+                "R": <int>,
+                "G": <int>,
+                "B": <int>,
+                "A": <int>
+            },
+            "hsl": {
+                "H": <float>,
+                "S": <float>,
+                "L": <float>,
+                "A": <int>
+            },
+            "quantity": <int>,
+            "vibrant": <string>
+        },
     ]
     },
 ... 
 ]
 ```
+
+The `uri` will be relativ to the host `uploads/<id>/<name>`. So you have to add the hostname by yourself.
 
 ## Decoupled frontend dev environment with docker
 
