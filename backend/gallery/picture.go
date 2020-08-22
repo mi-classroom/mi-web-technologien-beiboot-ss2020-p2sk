@@ -137,6 +137,7 @@ func (p Picture) CropResize(size ImageSize) {
 }*/
 
 // Quantize erstellt eine Farbpalette
+//func (p Picture) quantize(count int) ColorPalette {
 func (p Picture) quantize(count int) ColorPalette {
 	palette := vibrant.NewPaletteBuilder(p.Image()).
 		MaximumColorCount(uint32(count)).
@@ -145,12 +146,30 @@ func (p Picture) quantize(count int) ColorPalette {
 	var colorPalette ColorPalette
 
 	for _, swatch := range palette.Swatches() {
-		colorPalette = append(colorPalette, swatch.Color().(color.NRGBA))
+		newColor := new(Color)
+		newColor.NRGBA = swatch.Color().(color.NRGBA)
+		newColor.HSL = swatch.HSL()
+		newColor.Quantity = swatch.Population()
+
+		switch swatch {
+		case palette.VibrantSwatch():
+			newColor.Vibrant = "vibrant"
+		case palette.LightVibrantSwatch():
+			newColor.Vibrant = "lightvibrant"
+		case palette.DarkVibrantSwatch():
+			newColor.Vibrant = "darkvibrant"
+		case palette.MutedSwatch():
+			newColor.Vibrant = "muted"
+		case palette.LightMutedSwatch():
+			newColor.Vibrant = "lightmuted"
+		case palette.DarkMutedSwatch():
+			newColor.Vibrant = "darkmuted"
+		default:
+			newColor.Vibrant = ""
+		}
+
+		colorPalette = append(colorPalette, *newColor)
 	}
-
-	/*sort.Sort(colorPalette, func() {
-
-	})*/
 
 	return colorPalette
 }

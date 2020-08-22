@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"sort"
 	"time"
+
+	"github.com/RobCherry/vibrant"
 )
 
 const dirMode os.FileMode = 0755
@@ -143,14 +145,22 @@ func (c Collection) GetPreviewPicture() Picture {
 	return c[0]
 }
 
-// ColorPalette beschreibt eine Sammlung von Farben
-type ColorPalette []color.NRGBA
+// Color repräsentiert eine quantifizierte Farbe
+type Color struct {
+	NRGBA    color.NRGBA
+	HSL      vibrant.HSL
+	Quantity uint32
+	Vibrant  string
+}
+
+// ColorPalette beschreibt die häufigsten Farben des Bildes in unterschiedlichen Formaten
+type ColorPalette []Color
 
 // NewColorPalette erzeugt ein neues ColorPalette Objekt
-func NewColorPalette(palette color.Palette) ColorPalette {
+/* func NewColorPalette(palette color.Palette) ColorPalette {
 	fp := make(ColorPalette, len(palette))
 	for i, c := range palette {
 		fp[i] = c.(color.NRGBA)
 	}
 	return fp
-}
+} */

@@ -21,7 +21,7 @@ import (
 	"../gallery"
 )
 
-const uploadDir = "../" + config.UploadDir
+const uploadDir = config.UploadDir
 const defaultQuality = 90
 
 var picsumURI = "https://picsum.photos/v2/list?page=%d&limit=%d"
@@ -74,7 +74,13 @@ func deleteImages() {
 
 	switch answer {
 	case 'y', 'Y':
-		dirItems, _ := ioutil.ReadDir(uploadDir)
+		dirItems, err := ioutil.ReadDir(uploadDir)
+
+		if err != nil {
+			fmt.Println("Upload folder not found. Please run the scaffolding from the root dir `go run scaffolding/scaffolding.g -h`")
+			os.Exit(1)
+		}
+
 		for _, dirItem := range dirItems {
 			if dirItem.IsDir() {
 				os.RemoveAll(path.Join([]string{uploadDir, dirItem.Name()}...))
