@@ -188,12 +188,3 @@ func (cp ColorPalette) Vibrant() Color {
 
 	return vibrant
 }
-
-// NewColorPalette erzeugt ein neues ColorPalette Objekt
-/* func NewColorPalette(palette color.Palette) ColorPalette {
-	fp := make(ColorPalette, len(palette))
-	for i, c := range palette {
-		fp[i] = c.(color.NRGBA)
-	}
-	return fp
-} */
