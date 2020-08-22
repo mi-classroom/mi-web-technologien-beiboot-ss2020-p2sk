@@ -32,10 +32,11 @@ type Picture struct {
 
 func (p Picture) MarshalJSON() ([]byte, error) {
 	jsonMap := map[string]string{
-		"name":   p.Name(),
-		"uri":    p.Path,
-		"width":  strconv.Itoa(p.Size().Width),
-		"height": strconv.Itoa(p.Size().Height),
+		"name":        p.Name(),
+		"uri":         p.Path,
+		"width":       strconv.Itoa(p.Size().Width),
+		"height":      strconv.Itoa(p.Size().Height),
+		"orientation": p.Orientation(),
 	}
 	//print(p.Path)
 	return json.Marshal(jsonMap)
@@ -73,6 +74,14 @@ func (p Picture) Size() ImageSize {
 func (p Picture) Width() int {
 	config, _, _ := image.DecodeConfig(p.Open())
 	return config.Width
+}
+
+func (p Picture) Orientation() string {
+	if p.Size().Width > p.Size().Height {
+		return "landscape"
+	} else {
+		return "portrait"
+	}
 }
 
 // Open öffnet die Datei und gibt einen Datei Handler zurück
