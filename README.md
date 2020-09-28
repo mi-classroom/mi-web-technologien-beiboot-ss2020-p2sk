@@ -76,7 +76,7 @@ docker-compose down [--remove-orphans]
 
 ## Example PWA implementation
 
-An example is accessible via the [github.io page](https://p2sk.github.io/mi-web-technologien-beiboot-ss2020-Dominikdeimel/Frontend/devPage/public/). Descisions made for the PWA can be viewed in the [Decision.md](https://github.com/p2sk/mi-web-technologien-beiboot-ss2020-Dominikdeimel/blob/master/Frontend/Desicion.md). The implementation is based on Dominik Deimel Repos. The [fork is here](https://github.com/p2sk/mi-web-technologien-beiboot-ss2020-Dominikdeimel).
+An example is accessible via the [github.io page](https://p2sk.github.io/mi-web-technologien-beiboot-ss2020-Dominikdeimel/Frontend/devPage/public/). Descisions made for the PWA can be viewed in the [Decision.md](https://github.com/p2sk/mi-web-technologien-beiboot-ss2020-Dominikdeimel/blob/master/Frontend/Desicion.md). The implementation is based on Dominik Deimels repo and the [fork is here](https://github.com/p2sk/mi-web-technologien-beiboot-ss2020-Dominikdeimel).
 
 ## How to contribute
 
