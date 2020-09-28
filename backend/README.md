@@ -38,7 +38,7 @@ docker-compose exec backend go test gallery/
 
 ## Benchmark
 
-If you Benchmark linl golang testing.
+The benchmark shows the fastest way to get the image width. One way is through `DecodeConfig` and the other via the image `Bounds().Dx()` function. `DecodeConfig` is much faster.
 
 ```
 docker-compose exec backend go test -bench gallery/
