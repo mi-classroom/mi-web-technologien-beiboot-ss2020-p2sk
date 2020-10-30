@@ -23,3 +23,4 @@ Die Studierenden sind in der Lage, neue Technologien und Strömungen im Kontext 
 - schöne Realisierung des Scaffolding
 - teilweise auskommentierter Code :(
 - Hart gecodete Referenzen in Templates :(
+- resultierender PWA Code & Layout nicht optimal :(
